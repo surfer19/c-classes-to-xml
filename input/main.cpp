@@ -1,4 +1,4 @@
-class Box {
+class box {
    public:
       double length;
       double breadth;

@@ -6,33 +6,57 @@
  * Date: 18.2.17
  * Time: 13:51
  */
-class Scanner
-{
-    function __construct(){
-        echo "start scanner \n";
+class Scanner {
 
-        #$token = new Token();
-        #$token->getNextToken();
+    function __construct(){
+        // create instance of Token
         $this->token = new Token();
+        // create instance of keyWords
+        $this->keyWords = new KeyWords();
+        // open file
         $this->file = $this->readFromFile();
-        $this->getNextToken();
+        do {
+            echo "-----------------\n";
+            $this->getNextToken();
+            echo "TOKEN STATE = ".$this->token->state;
+            echo "\n";
+            echo "TOKEN DATA = ".$this->token->data;
+            echo "\n";
+            echo "-----------------\n";
+        } while($this->token->state != StatesEnum::S_EOF);
+        // close file
+        $this->closeFile();
+
     }
     public function readFromFile(){
         $file = fopen("input/main.cpp", "r");
 
-        /*while(!feof($file)){
-            $char = fgetc($file);
-            $this->getNextToken($char);
-        }*/
         return $file;
-        //fclose($file);
+    }
+    public function editToken($new_character, $new_state){
+        $this->token->data .= $new_character;
+        $this->token->state = $new_state;
+    }
+    public function clearToken(){
+        $this->token->state = 0;
+        $this->token->data = '';
+    }
+    public function closeFile(){
+        fclose($this->file);
     }
     public function getNextToken(){
+
+        // INITIAL STATE
         $state = StatesEnum::S_START;
-        //echo "start state = ".$state;
+
+        //clear token
+        $this->clearToken();
+
         while(1){
+
             $char = fgetc($this->file);
-            //echo "precital som znak\n". $char;
+
+            //echo "read: ". $char. "\n";
 
             switch($state){
                 case StatesEnum::S_START:
@@ -40,64 +64,96 @@ class Scanner
                     if (ctype_space($char)){
                         //echo "its space\n";
                         $state = StatesEnum::S_START;
+                        break;
                     }
                     else if(feof($this->file)){
-                        return 1;
+                        $this->editToken('EOF', StatesEnum::S_EOF);
+
+                        return $this->token;
                     }
-                    else if(ctype_alpha($char)) {
-                        echo "FOUND char\n";
+                    else if(ctype_alpha($char) || ctype_alnum($char) || $char == '_') {
+
+                        $state = StatesEnum::S_IDENTIFIER;
+                        $this->editToken($char, StatesEnum::S_IDENTIFIER);
+                        break;
                     }
                     switch ($char) {
                         case '{':
-                        case '}':
-                        case '(':
-                        case ')':
-                        case '=':
-                        case '*':
-                        case '&':
-                        case ':':
-                        case ',':
-                        case '~':
-                        case ';':
-                            echo "char $char \n";
-                            $this->editToken($char);
+                            $this->editToken($char, StatesEnum::S_LEFT_VINCULUM);
                             return $this->token;
-                            break;
+                        case '}':
+                            $this->editToken($char, StatesEnum::S_RIGHT_VINCULUM);
+                            return $this->token;
+                        case '(':
+                            $this->editToken($char, StatesEnum::S_LEFT_BRACKET);
+                            return $this->token;
+                        case ')':
+                            $this->editToken($char, StatesEnum::S_RIGHT_VINCULUM);
+                            return $this->token;
+                        case '=':
+                            $this->editToken($char, StatesEnum::S_EQUAL_SIGN);
+                            return $this->token;
+                        case '*':
+                            $this->editToken($char, StatesEnum::S_STAR);
+                            return $this->token;
+                        case '&':
+                            $this->editToken($char, StatesEnum::S_AMPERESAND);
+                            return $this->token;
+                        case ':':
+                            $this->editToken($char, StatesEnum::S_COLON);
+                            return $this->token;
+                        case ',':
+                            $this->editToken($char, StatesEnum::S_COMMA);
+                            return $this->token;
+                        case '~':
+                            $this->editToken($char, StatesEnum::S_WAVE);
+                            return $this->token;
+                        case ';':
+                            $this->editToken($char, StatesEnum::S_SEMICOLON);
+                            return $this->token;
+
                         default:
                             echo "CHARACTER NOT FOUND LEL :(\n";
-                            break;
+                            die(99);
                     }
-                break;
+                    break;
+
+                case StatesEnum::S_IDENTIFIER:
+                    if (ctype_alpha($char) || ctype_alnum($char) || $char == '_'){
+                        $this->editToken($char, StatesEnum::S_IDENTIFIER);
+                        $state = StatesEnum::S_IDENTIFIER;
+                        // try if is identifier=keyword and change state
+                        if(in_array($this->token->data, $this->keyWords->keywords)){
+                            $this->token->state = StatesEnum::S_KEYWORD;
+                        }
+                    }
+                    else {
+                        fseek($this->file, -1 , SEEK_CUR);
+                        $state = StatesEnum::S_END;
+                    }
+                    break;
+
+                case StatesEnum::S_END:
+                    fseek($this->file, -1 , SEEK_CUR);
+                    return $this->token;
             }
         }
         return $this->token;
     }
-    public function editToken($data){
-        $this->token->data = $data;
-    }
 }
 
-/* keywords = class, public, protected, private, using, virtual a static
-   data_types  =  bool, char, char16_t, char32_t, wchar_t, , int
-                  float, double, long double, void
-signed char
-short int
-long int
-long long int
-unsigned char
-unsigned short int
-unsigned int
-unsigned long int
-unsigned long long int
-
-*/
+$scanner = new Scanner();
 
 class Token {
     function __construct(){
         $this->state = StatesEnum::S_START;
         $this->data = '';
     }
+}
 
+class KeyWords {
+    public $keywords = array("class", "public", "protected", "private", "using", "virtual", "static",
+                             "signed", "unsigned", "short", "long", "char", "int");
 }
 
 abstract class StatesEnum {
@@ -121,5 +177,3 @@ abstract class StatesEnum {
 
 
 
-$scanner = new Scanner();
-//$obj->doSomething();
