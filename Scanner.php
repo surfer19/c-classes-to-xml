@@ -15,7 +15,7 @@ class Scanner {
         $this->keyWords = new KeyWords();
         // open file
         $this->file = $this->readFromFile();
-        do {
+        /*do {
             echo "-----------------\n";
             $this->getNextToken();
             echo "TOKEN STATE = ".$this->token->state;
@@ -23,13 +23,13 @@ class Scanner {
             echo "TOKEN DATA = ".$this->token->data;
             echo "\n";
             echo "-----------------\n";
-        } while($this->token->state != StatesEnum::S_EOF);
+        } while($this->token->state != StatesEnum::S_EOF);*/
         // close file
-        $this->closeFile();
+        //$this->closeFile();
 
     }
     public function readFromFile(){
-        $file = fopen("input/main.cpp", "r");
+        $file = fopen("tests/my_test_00.in", "r");
 
         return $file;
     }
@@ -142,7 +142,7 @@ class Scanner {
     }
 }
 
-$scanner = new Scanner();
+//$scanner = new Scanner();
 
 class Token {
     function __construct(){
