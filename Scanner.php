@@ -55,7 +55,6 @@ class Scanner {
         while(1){
 
             $char = fgetc($this->file);
-
             //echo "read: ". $char. "\n";
 
             switch($state){
@@ -88,7 +87,7 @@ class Scanner {
                             $this->editToken($char, StatesEnum::S_LEFT_BRACKET);
                             return $this->token;
                         case ')':
-                            $this->editToken($char, StatesEnum::S_RIGHT_VINCULUM);
+                            $this->editToken($char, StatesEnum::S_RIGHT_BRACKET);
                             return $this->token;
                         case '=':
                             $this->editToken($char, StatesEnum::S_EQUAL_SIGN);

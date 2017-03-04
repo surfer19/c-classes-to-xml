@@ -1,4 +1,4 @@
-<Prog> -> <ClassList><Eof>
+<Prog> -> <ClassList><Eof>  // class
 <ClassList> -> eps
 <ClassList> -> <Class> <ClassList>
 <Class> -> class id <InheritanceList> { <ClassBody> };
