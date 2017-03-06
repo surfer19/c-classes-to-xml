@@ -18,6 +18,7 @@
 <ParameterList2> -> eps
 <DeclarationBody> -> {}
 <DeclarationBody> -> = 0
+<AccessModifier> -> eps
 <AccessModifier> -> public
 <AccessModifier> -> protected
 <AccessModifier> -> private
@@ -53,7 +54,9 @@ AccessModifier = private, public....
 
 // Inheritance
 class A: public B, public C, public D {}
-
+// options of sign inheritance
+: public A
+: A, -> inheritanceList2()
 
     const S_START            = 0;
     const S_END              = 1;
