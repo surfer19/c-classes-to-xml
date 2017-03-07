@@ -1,13 +1,14 @@
 <Prog> -> <ClassList><Eof>  // class
 <ClassList> -> eps
-<ClassList> -> <Class> <ClassList>
+<ClassList> -> <Class><ClassList>
 <Class> -> class id <InheritanceList> { <ClassBody> };
 <Class> -> eps
 <InheritanceList>  -> : <AccessModifier> id <InheritanceList2>      // : public B, public C, public D
-<InheritanceList>  -> eps
 <InheritanceList2> -> , <AccessModifier> id <InheritanceList2>       // , public B, public C, public D
 <InheritanceList2> -> eps
-<ClassBody> -> <AccessModifier>: <Declarations>
+<ClassBody> -> <AccessModifier> <Colon> <Declarations>
+<Colon> -> :
+<Colon> -> eps
 <Declarations> -> <Declaration> <Declarations>
 <Declaration> -> <Prefix> <DataType> id <Declaration2>
 <Declaration2> -> ( <ParameterList> ) <DeclarationBody> ;
@@ -26,13 +27,9 @@
 <Prefix>  -> using
 <Prefix>  -> virtual
 <Prefix>  -> eps
-<DataType> -> char
-<DataType> -> char16_t
-<DataType> -> char32_t
-<DataType> -> wchar_t
 <DataType> -> signed char
-<DataType> -> signed short int
 <DataType> -> signed int
+<DataType> -> signed short int
 <DataType> -> signed long int
 <DataType> -> signed long long int
 <DataType> -> unsigned char
@@ -45,6 +42,10 @@
 <DataType> -> long double
 <DataType> -> bool
 <DataType> -> void
+<DataType> -> char
+<DataType> -> char16_t
+<DataType> -> char32_t
+<DataType> -> wchar_t
 
 democviko slajdy - pravidla pre parametre
 

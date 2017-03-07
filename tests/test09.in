@@ -1,4 +1,6 @@
-class A {virtual int f(void)= 0 ; };
+class A {
+    virtual int f(void)= 0 ;
+};
 class B : A {
 public:
     int var;
