@@ -11,6 +11,16 @@ define('DEBUG', true);
  * Date: 2.3.17
  * Time: 13:57
  */
+/*
+ *  TODO
+ *
+ */
+
+// TODO co ked chyba pred deklaraciou <AccessModifier> !! osetrit
+//class A {
+//  virtual int a;
+//};
+// TODO dorobit parameter list pre viac parametrov
 class Parser
 {
     // just for print
@@ -64,7 +74,7 @@ class Parser
             $this->parseClassList();
         }
         // comes token EOF so print them
-        $this->printTokenData('startProg      ') ;
+        $this->printTokenData('startProg   EOF') ;
 
     }
     /*
@@ -87,16 +97,20 @@ class Parser
 
             // its non inheritance
             if ($this->actual_token->state == StatesEnum::S_LEFT_VINCULUM){
-                $this->printTokenData("Class exp     {");
+                $this->printTokenData("Class         {");
                 $this->getAndSetActualToken();
-                $this->parseClassBody();
+
+                // if is classbody empty dont go inside function
+                if ($this->actual_token->state != StatesEnum::S_RIGHT_VINCULUM) {
+                    $this->parseClassBody();
+                }
 
                 // get }
                 // inside classBody read '}' so just print that
-                $this->printTokenData("Class exp     }");
+                $this->printTokenData("Class         }");
                 // get ;
                 $this->getAndSetActualToken();
-                $this->printTokenData("Class exp     ;");
+                $this->printTokenData("Class         ;");
 
                 // get 'class' and go up
                 $this->getAndSetActualToken();
@@ -104,7 +118,7 @@ class Parser
             }
             // its inheritanceList
             else if ($this->actual_token->state == StatesEnum::S_COLON) {
-                $this->printTokenData("Class     exp :");
+                $this->printTokenData("Class         :");
 
                 // get AccessModifier
                 $this->getAndSetActualToken();
@@ -114,26 +128,56 @@ class Parser
                 $this->parseInheritanceList();
 
                 // inside inheritanceList read '{' so just print that
-                $this->printTokenData("Class     exp {");
+                $this->printTokenData("Class         {");
 
                 // get next token and CALL
                 $this->getAndSetActualToken();
                 $this->printTokenData("Class          ");
-                // CALL ClassBody
-                $this->parseClassBody();
+
+                // if is classbody empty dont go inside function
+                if ($this->actual_token->state != StatesEnum::S_RIGHT_VINCULUM) {
+                    // CALL ClassBody
+                    $this->parseClassBody();
+                }
 
                 // get }
-                $this->getAndSetActualToken();
-                $this->printTokenData("Class     exp }");
+                //$this->getAndSetActualToken();
+                $this->printTokenData("Class         }");
 
                 // get ;
                 $this->getAndSetActualToken();
-                $this->printTokenData("Class     exp ;");
+                $this->printTokenData("Class         ;");
 
                 // get 'class' and go up
                 $this->getAndSetActualToken();
 
             }
+        }
+    }
+
+    public function parseClassBody(){
+        // GO TO PPP ?
+        // token data == public/protected/private
+        if ($this->parseAccessModifier()){
+
+            // read ':'
+            $this->getAndSetActualToken();
+            $this->printTokenData('ClassBody     :');
+
+            // <Colon>
+            if ($this->actual_token->state == StatesEnum::S_COLON){
+                $this->getAndSetActualToken();
+                $this->parseDeclarations();
+            }
+        }
+        elseif ($this->parsePrefix(0)){
+            //$this->printTokenData('Decls       wtf');
+            //$this->getAndSetActualToken();
+            $this->parseDeclarations();
+        }
+        else {
+            $this->getAndSetActualToken();
+            $this->printTokenData('ClassB.       }');
         }
     }
 
@@ -145,18 +189,18 @@ class Parser
             or $this->actual_token->data == 'protected'){
 
             $this->getAndSetActualToken();
-            $this->printTokenData("InhList  exp id");
+            $this->printTokenData("InhList      id");
 
             if ($this->actual_token->state == StatesEnum::S_IDENTIFIER){
 
                 $this->getAndSetActualToken();
-                $this->printTokenData("InhList        ");
+                $this->printTokenData("InhList     ,/{");
 
                 // comma = go to inherList2
                 if ($this->actual_token->state == StatesEnum::S_COMMA) {
-                    $this->getAndSetActualToken();
-                    $this->printTokenData("InherList   exp ,");
 
+                    //call inher2
+                    $this->parseInheritanceList2();
                 }
                 // else is read '{' just go up
 
@@ -169,7 +213,7 @@ class Parser
 
             // ',' = go to inherList2
             if ($this->actual_token->state == StatesEnum::S_COMMA) {
-                $this->printTokenData("InherList exp ,");
+                $this->printTokenData("InherList     ,");
                 $this->parseInheritanceList2();
             }
             // else is read '{' just go up
@@ -190,7 +234,7 @@ class Parser
             ) {
 
                 $this->getAndSetActualToken();
-                $this->printTokenData("InhList2 exp id");
+                $this->printTokenData("InhList2     id");
 
 
                 if ($this->actual_token->state == StatesEnum::S_IDENTIFIER) {
@@ -200,12 +244,12 @@ class Parser
 
                     // ',' = go to inherList2
                     if ($this->actual_token->state == StatesEnum::S_COMMA) {
-                        $this->printTokenData("InhList2  exp ,");
+                        $this->printTokenData("InhList2      ,");
                         $this->parseInheritanceList2();
                     }
                     // get '{' just go up
                     else
-                        $this->printTokenData("InhList2  exp {");
+                        $this->printTokenData("InhList2      {");
                 }
             }
             // short sign without <AccessModifier>
@@ -215,69 +259,124 @@ class Parser
 
                 // ',' = go to inherList2
                 if ($this->actual_token->state == StatesEnum::S_COMMA) {
-                    $this->printTokenData("InhList2  exp ,");
+                    $this->printTokenData("InhList2      ,");
                     $this->parseInheritanceList2();
                 }
                 // else is read '{' just go up
                 else
-                    $this->printTokenData("InhList2  exp {");
-            }
-        }
-    }
-
-    public function parseClassBody(){
-        // GO TO PPP ?
-        // token data == public/protected/private
-        if ($this->parseAccessModifier()){
-
-            // read ':'
-            $this->getAndSetActualToken();
-            $this->printTokenData('ClassBody exp :');
-
-            // <Colon>
-            if ($this->actual_token->state == StatesEnum::S_COLON){
-                //  $this->getAndSetActualToken();
-                //  expect <Prefix> or <DataType>
-                //  $this->printTokenData('ClassB.  SUV|DT');
-                $this->getAndSetActualToken();
-                $this->printTokenData('ClassBody      ');
-                $this->parseDeclarations();
+                    $this->printTokenData("InhList2      {");
             }
         }
     }
 
     public function parseDeclarations(){
+        // TODO looks like a bug
 
-        // call getNextTOKEN
-        // is token parsePrefix() or parseDataType() == true??
-        // yes get NExt token ....
-        // recursive();
-        // TODO is public, protected, virtual, static, int IN KEYWORD ARRAY???
-        if ($this->actual_token->state == StatesEnum::S_KEYWORD) {
+        // get SUV(<Prefix>)
+        if ($this->parsePrefix(0)){
+            $this->printTokenData('Decls       suv');
+            // get <DataType>
+            $this->getAndSetActualToken();
+            $this->printTokenData('Decls        DT');
 
-            if ($this->parsePrefix(0) or ($this->actual_token->data == $this->parseDataType())) {
-                //echo "CALL RECURSIVE". PHP_EOL;
+            if ($this->actual_token->data == $this->parseDataType()) {
+                // get id
+                $this->getAndSetActualToken();
+                $this->printTokenData('Decls        id');
+
                 $this->parseDeclaration();
                 $this->parseDeclarations();
             }
         }
+        // get empty <Prefix> so read DataType
+        else if ($this->actual_token->data == $this->parseDataType()){
+
+            $this->printTokenData('Decls        DT');
+
+            $this->getAndSetActualToken();
+            $this->printTokenData('Decls        id');
+
+            $this->parseDeclaration();
+            $this->parseDeclarations();
+        }
+        // TODO wtf what it mean?
+        //else {
+        //    $this->printTokenData('Decls         }');
+        //}
     }
 
     public function parseDeclaration(){
         //echo "DECLARATION". PHP_EOL;
-        if ($this->actual_token->data == $this->parsePrefix(1)) {
+        if ($this->actual_token->state == StatesEnum::S_IDENTIFIER) {
             $this->getAndSetActualToken();
-            $this->printTokenData('Declaration');
+
+            if ($this->actual_token->state == StatesEnum::S_SEMICOLON){
+                $this->printTokenData('Decl          ;');
+                $this->getAndSetActualToken();
+                $this->printTokenData('Decl   }/suv/DT');
+            }
+            // go insede pararameter list
+            elseif ($this->actual_token->state == StatesEnum::S_LEFT_BRACKET) {
+                $this->printTokenData('Decl          (');
+
+                $this->getAndSetActualToken();
+                $this->printTokenData('Decl         DT');
+
+                $this->parseParameterList();
+
+                $this->getAndSetActualToken();
+                $this->printTokenData('Decl          )');
+
+                $this->getAndSetActualToken();
+
+                $this->parseDeclarationBody();
+
+                $this->getAndSetActualToken();
+                $this->printTokenData('Decl          ;');
+
+                //  get }
+                // TODO cant get token on this place I think but maybe iam wrong
+                $this->getAndSetActualToken();
+                $this->printTokenData('Decl           ');
+            }
+        }
+    }
+
+    public function parseDeclarationBody(){
+
+        if ($this->actual_token->state == StatesEnum::S_EQUAL_SIGN){
+            $this->printTokenData('DeclBody      =');
+
             $this->getAndSetActualToken();
-            $this->printTokenData('Declaration');
-            $this->getAndSetActualToken();
-            $this->printTokenData('Declaration');
+
+            if ($this->actual_token->state == StatesEnum::S_ZERO){
+                $this->printTokenData('DeclBody      0');
+            }
 
         }
+        // TODO elseif - it can be standard decl body ' {} '
+    }
 
-        // get one token more and read them up
-        $this->getAndSetActualToken();
-        $this->printTokenData('Declaration');
+    public function parseParameterList(){
+
+        if ($this->parseDataType()){
+
+            // <DataType> is void
+            if ($this->actual_token->data == 'void') {
+                $this->printTokenData('ParList    void');
+                return;
+            }
+            // FIXME maybe bad place
+            elseif ($this->actual_token->state == StatesEnum::S_IDENTIFIER){
+                $this->printTokenData('ParList      id');
+            }
+        }
+        // parameter list is empty
+        elseif ($this->actual_token->state == StatesEnum::S_RIGHT_BRACKET){
+            $this->printTokenData('ParList      )');
+            // FIXME & TESTME
+            ///$this->getAndSetActualToken();
+        }
 
     }
 
@@ -286,11 +385,11 @@ class Parser
            case 'public':
            case 'protected':
            case 'private':
-               echo "----------------------AccessMod=TRUE". PHP_EOL;
+               //echo "-------------------------AccessMod=TRUE". PHP_EOL;
                return true;
 
            default :
-               echo "----------------------AccessMod=FALSE". PHP_EOL;
+               //echo "-------------------------AccessMod=FALSE". PHP_EOL;
                return false;
 
        }
@@ -316,9 +415,11 @@ class Parser
                 case 'bool':
                 case 'void':
                 case 'char':
+                case 'int':
                 case 'char16_t':
                 case 'char32_t':
                 case 'wchar_t':
+                    //echo "-------------------------DataType=".$string. PHP_EOL;
                     return $string;
                     break;
 
@@ -336,11 +437,11 @@ class Parser
             case 'static':
             case 'using':
             case 'virtual':
-                echo "----------------------Prefix-". $this->actual_token->data ."=TRUE". PHP_EOL;
+                //echo "-------------------------Prefix-". $this->actual_token->data ."=TRUE". PHP_EOL;
                 return ($return_value ? $string : true);
 
             default :
-                echo "----------------------Prefix-". $this->actual_token->data ."=FALSE". PHP_EOL;
+                //echo "-------------------------Prefix-". $this->actual_token->data ."=FALSE". PHP_EOL;
                 return false;
 
         }

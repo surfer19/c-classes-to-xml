@@ -1,6 +1,6 @@
 class A {
-    virtual int f(void) =0;
-    };
+    virtual int ba;
+};
 class B : A {};
 class C {};
 class D : B, C {};

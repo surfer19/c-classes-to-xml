@@ -29,7 +29,7 @@ class Scanner {
 
     }
     public function readFromFile(){
-        $file = fopen("tests/my_test_00.in", "r");
+        $file = fopen("tests/test03.in", "r");
 
         return $file;
     }
@@ -67,6 +67,11 @@ class Scanner {
                     }
                     else if(feof($this->file)){
                         $this->editToken('EOF', StatesEnum::S_EOF);
+
+                        return $this->token;
+                    }
+                    else if ($char == '0'){
+                        $this->editToken('0', StatesEnum::S_ZERO);
 
                         return $this->token;
                     }
@@ -171,7 +176,8 @@ abstract class StatesEnum {
     const S_RIGHT_VINCULUM   = 12; // '}'
     const S_LEFT_BRACKET     = 13; // '('
     const S_RIGHT_BRACKET    = 14; // ')'
-    const S_EOF              = 15; // EOF
+    const S_ZERO             = 15; // '0'
+    const S_EOF              = 16; // EOF
 }
 
 

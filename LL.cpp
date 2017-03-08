@@ -7,11 +7,13 @@
 <InheritanceList2> -> , <AccessModifier> id <InheritanceList2>       // , public B, public C, public D
 <InheritanceList2> -> eps
 <ClassBody> -> <AccessModifier> <Colon> <Declarations>
+<ClassBody> -> <Declarations>
 <Colon> -> :
 <Colon> -> eps
 <Declarations> -> <Declaration> <Declarations>
-<Declaration> -> <Prefix> <DataType> id <Declaration2>
-<Declaration2> -> ( <ParameterList> ) <DeclarationBody> ;
+<Declarations> -> eps
+<Declaration> -> <Prefix> <DataType> id <Declaration2> ;
+<Declaration2> -> ( <ParameterList> ) <DeclarationBody>
 <Declaration2> -> ;
 <ParameterList> ->  <DataType> id <ParameterList2>                     // int a
 <ParameterList> ->  eps

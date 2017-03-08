@@ -1,5 +1,6 @@
-class B : A {
+class B {
 public:
-    static int a ;
-    static int b ;
-} ;
+    static int a;
+    int b;
+    virtual char x;
+};
