@@ -26,7 +26,6 @@ class Scanner {
         } while($this->token->state != StatesEnum::S_EOF);*/
         // close file
         //$this->closeFile();
-
     }
     public function readFromFile(){
         $file = fopen("tests/test03.in", "r");

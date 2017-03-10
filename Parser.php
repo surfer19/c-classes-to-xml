@@ -1,6 +1,8 @@
 <?php
 
 include("Scanner.php");
+include("ClassTable.php");
+include("Context.php");
 
 define('DEBUG_SCANNER', false);
 define('DEBUG', true);
@@ -10,10 +12,6 @@ define('DEBUG', true);
  * User: majko
  * Date: 2.3.17
  * Time: 13:57
- */
-/*
- *  TODO
- *
  */
 
 // TODO co ked chyba pred deklaraciou <AccessModifier> !! osetrit
@@ -27,14 +25,11 @@ class Parser
     public $name_func = "";
 
     function __construct() {
-
         // create instance of scanenr
         $this->scanner = new Scanner();
         $this->actual_token = new Token();
-        $this->classArr = new classArr;
-        /*$file = fopen("output.cpp","w");
-        fwrite($file,"");
-        fclose($file);*/
+        $this->objContext = new Context();
+        $this->objTable = new ClassTable();
         /*
          *
          * JUST FOR DEBUG SCANNER
@@ -64,6 +59,8 @@ class Parser
         else
             echo "\n-- PARSE ERROR !!!--  " . PHP_EOL;
 
+        $this->objContext->printContext();
+        $this->objTable->printTable();
     }
     /*
      *   <Prog> -> <ClassList><Eof>
@@ -75,17 +72,23 @@ class Parser
         }
         // comes token EOF so print them
         $this->printTokenData('startProg   EOF') ;
-
     }
     /*
      *   <ClassList> -> <Class><ClassList>
      */
     public function parseClassList(){
         if ($this->actual_token->data == 'class') {
-            //$this->printTokenData('Classlist      ');
+            // set actual class name to token
+            // read id of class
             $this->getAndSetActualToken();
             $this->printTokenData('Classlist      ');
+            // set class name to context
+            $this->objContext->setClassName($this->actual_token->data);
+
             $this->parseClass();
+            /*  TODO
+             *  after parsing class we can push infos from context
+             */
             $this->parseClassList();
         }
     }
@@ -170,6 +173,7 @@ class Parser
                 $this->parseDeclarations();
             }
         }
+        // SUV
         elseif ($this->parsePrefix(0)){
             //$this->printTokenData('Decls       wtf');
             //$this->getAndSetActualToken();
@@ -458,11 +462,11 @@ class Parser
 
 }
 
-class ClassArr
+/*class ClassArr
 {
     function __construct(){
        $this-> array_of_classes = array();
     }
-}
+}*/
 
 $parser = new Parser();

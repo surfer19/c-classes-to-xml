@@ -1,0 +1,11 @@
+{
+  "ClassArray" : [{
+      "ClassObject": [{
+          "className" : "Class1",
+          "ClassMethod": [{
+              "name" : "method1",
+              "arguments": [{}]
+          }]
+      }]
+  }]
+}
