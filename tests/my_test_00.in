@@ -1,6 +1,10 @@
 class B {
-public:
-    static int a;
-    int b;
-    virtual char x;
+   public:
+       static int a;
+       virtual char b;
+};
+class A {
+   private:
+       using int x;
+       virtual char y;
 };

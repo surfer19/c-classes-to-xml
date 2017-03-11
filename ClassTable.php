@@ -88,11 +88,26 @@ class ClassTable
     }
 }
 
+// FIXME dirty solution as fk
+class LastClassObject
+{
+    function __construct($class_table){
+        $this->last_obj = $this->getLastObj($class_table);
+    }
+    public function getLastObj($table){
+        $lastKey = end($table->classArray);
+        //print_r((Array) $lastKey);
+        return $lastKey;
+    }
+
+}
+
 // good pattern
 class ClassObject
 {
     function __construct(){
         $this->methods = array();
+        $this->variables = array();
         $this->class_name = '';
     }
     public function setClassName($class_name){
@@ -104,6 +119,9 @@ class ClassObject
     public function pushMethod($method) {
         array_push($this->methods, $method);
     }
+    public function pushVariable($variable) {
+        array_push($this->variables, $variable);
+    }
 }
 
 class ClassMethod
@@ -111,6 +129,7 @@ class ClassMethod
     function __construct($name, $type, $arguments){
         $this->method_name = $name;
         $this->return_type = $type;
+        //TODO add scope
         $this->method_arguments = $arguments;
     }
     public function setMethodName($method_name){
@@ -134,6 +153,27 @@ class MethodArgument {
     function __construct($name, $type){
         $this->var_name = $name;
         $this->var_data_type = $type;
+    }
+    public function setVarName($var_name){
+        $this->var_name = $var_name;
+    }
+    public function getVarName(){
+        return $this->var_name;
+    }
+    public function setVarDataType($var_data_type){
+        $this->var_data_type = $var_data_type;
+    }
+    public function getVarDataType(){
+        return $this->var_data_type;
+    }
+}
+
+class ClassVariable {
+    function __construct($name, $type, $scope, $prefix){
+        $this->var_name = $name;
+        $this->var_data_type = $type;
+        $this->scope = $scope;
+        $this->prefix = $prefix;
     }
     public function setVarName($var_name){
         $this->var_name = $var_name;

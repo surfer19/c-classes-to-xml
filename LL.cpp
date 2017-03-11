@@ -20,7 +20,7 @@
 <ParameterList2> -> , <DataType> id <ParameterList2>                   // , int a
 <ParameterList2> -> eps
 <DeclarationBody> -> {}
-<DeclarationBody> -> = 0
+<DeclarationBody> -> = 0;
 <AccessModifier> -> eps
 <AccessModifier> -> public
 <AccessModifier> -> protected

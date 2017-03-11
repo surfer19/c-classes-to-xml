@@ -19,6 +19,13 @@ define('DEBUG', true);
 //  virtual int a;
 //};
 // TODO dorobit parameter list pre viac parametrov
+
+// TODO moze byt viac scopov v jednej triede??
+// class B : A {
+//      public:
+//          ...
+//      private:
+//          ...
 class Parser
 {
     // just for print
@@ -29,6 +36,7 @@ class Parser
         $this->scanner = new Scanner();
         $this->actual_token = new Token();
         $this->objContext = new Context();
+
         $this->objTable = new ClassTable();
         /*
          *
@@ -60,7 +68,12 @@ class Parser
             echo "\n-- PARSE ERROR !!!--  " . PHP_EOL;
 
         $this->objContext->printContext();
-        $this->objTable->printTable();
+        //$this->objTable->printTable();
+
+        // invented print_r() and var_dump() in 2017
+        print_r((array) $this->objTable);
+
+        //$objLast = new LastClassObject($this->objTable);
     }
     /*
      *   <Prog> -> <ClassList><Eof>
@@ -85,10 +98,16 @@ class Parser
             // set class name to context
             $this->objContext->setClassName($this->actual_token->data);
 
+            $objClass = new ClassObject();
+            $objClass->setClassName($this->objContext->getClassName());
+            $this->objTable->pushClass($objClass);
+
             $this->parseClass();
+
             /*  TODO
              *  after parsing class we can push infos from context
              */
+
             $this->parseClassList();
         }
     }
@@ -107,7 +126,6 @@ class Parser
                 if ($this->actual_token->state != StatesEnum::S_RIGHT_VINCULUM) {
                     $this->parseClassBody();
                 }
-
                 // get }
                 // inside classBody read '}' so just print that
                 $this->printTokenData("Class         }");
@@ -153,7 +171,6 @@ class Parser
 
                 // get 'class' and go up
                 $this->getAndSetActualToken();
-
             }
         }
     }
@@ -162,6 +179,12 @@ class Parser
         // GO TO PPP ?
         // token data == public/protected/private
         if ($this->parseAccessModifier()){
+            // CONTEXT set actual scope
+            $this->objContext->setScope($this->actual_token->data);
+            // TABLE set scope
+            $last_obj = new LastClassObject($this->objTable);
+            // TODO
+            //array_push($last_obj->last_obj->)
 
             // read ':'
             $this->getAndSetActualToken();
@@ -202,7 +225,6 @@ class Parser
 
                 // comma = go to inherList2
                 if ($this->actual_token->state == StatesEnum::S_COMMA) {
-
                     //call inher2
                     $this->parseInheritanceList2();
                 }
@@ -274,19 +296,31 @@ class Parser
     }
 
     public function parseDeclarations(){
-        // TODO looks like a bug
 
         // get SUV(<Prefix>)
         if ($this->parsePrefix(0)){
             $this->printTokenData('Decls       suv');
+            /*
+             * CONTEXT set prefix
+             */
+            $this->objContext->setPrefix($this->actual_token->data);
+
             // get <DataType>
             $this->getAndSetActualToken();
             $this->printTokenData('Decls        DT');
+            /*
+             * CONTEXT set dataType
+             */
+            $this->objContext->setDataType($this->actual_token->data);
 
             if ($this->actual_token->data == $this->parseDataType()) {
                 // get id
                 $this->getAndSetActualToken();
                 $this->printTokenData('Decls        id');
+                /*
+                 * CONTEXT set id
+                 */
+                $this->objContext->setDeclarationId($this->actual_token->data);
 
                 $this->parseDeclaration();
                 $this->parseDeclarations();
@@ -294,32 +328,59 @@ class Parser
         }
         // get empty <Prefix> so read DataType
         else if ($this->actual_token->data == $this->parseDataType()){
-
             $this->printTokenData('Decls        DT');
+            /*
+             * CONTEXT set dataType
+             */
+            $this->objContext->setDataType($this->actual_token->data);
 
             $this->getAndSetActualToken();
             $this->printTokenData('Decls        id');
+            /*
+             * CONTEXT set id
+             */
+            $this->objContext->setDeclarationId($this->actual_token->data);
 
             $this->parseDeclaration();
             $this->parseDeclarations();
         }
-        // TODO wtf what it mean?
-        //else {
-        //    $this->printTokenData('Decls         }');
-        //}
     }
 
     public function parseDeclaration(){
         //echo "DECLARATION". PHP_EOL;
         if ($this->actual_token->state == StatesEnum::S_IDENTIFIER) {
+
             $this->getAndSetActualToken();
 
             if ($this->actual_token->state == StatesEnum::S_SEMICOLON){
+                /*
+                 *  Definitely end of simple declaration at ex.- int variable;
+                 */
+                // TODO how get actual objClass ?
+
+                // get last object in Table Array
+                $last_obj = new LastClassObject($this->objTable);
+                // create TABLE variable from CONTEXT values
+                $obj_var  = new ClassVariable($this->objContext->getDeclarationId(),
+                                              $this->objContext->getDataType(),
+                                              $this->objContext->getScope(),
+                                              $this->objContext->getPrefix()
+                );
+
+                //var_dump($last_obj);
+                // push it to last object
+                if ($last_obj->last_obj != null) {
+                    array_push($last_obj->last_obj->variables, $obj_var);
+                    echo "pushed variable\n";
+                    //var_dump($last_obj);
+                }
+                //print_r((array)$last_obj);
+
                 $this->printTokenData('Decl          ;');
                 $this->getAndSetActualToken();
                 $this->printTokenData('Decl   }/suv/DT');
             }
-            // go insede pararameter list
+            // go inside pararameter list
             elseif ($this->actual_token->state == StatesEnum::S_LEFT_BRACKET) {
                 $this->printTokenData('Decl          (');
 
@@ -334,9 +395,6 @@ class Parser
                 $this->getAndSetActualToken();
 
                 $this->parseDeclarationBody();
-
-                $this->getAndSetActualToken();
-                $this->printTokenData('Decl          ;');
 
                 //  get }
                 // TODO cant get token on this place I think but maybe iam wrong
@@ -355,10 +413,25 @@ class Parser
 
             if ($this->actual_token->state == StatesEnum::S_ZERO){
                 $this->printTokenData('DeclBody      0');
-            }
 
+                $this->getAndSetActualToken();
+
+                if ($this->actual_token->state == StatesEnum::S_SEMICOLON) {
+                    $this->printTokenData('DeclBody      ;');
+
+                }
+            }
         }
-        // TODO elseif - it can be standard decl body ' {} '
+        // it can be standard decl body ' {} '
+        elseif ($this->actual_token->state == StatesEnum::S_LEFT_VINCULUM){
+            $this->printTokenData('DeclBody      {');
+
+            $this->getAndSetActualToken();
+
+            if ($this->actual_token->state == StatesEnum:: S_RIGHT_VINCULUM){
+                $this->printTokenData('DeclBody      }');
+            }
+        }
     }
 
     public function parseParameterList(){
@@ -447,7 +520,6 @@ class Parser
             default :
                 //echo "-------------------------Prefix-". $this->actual_token->data ."=FALSE". PHP_EOL;
                 return false;
-
         }
     }
 
@@ -461,12 +533,5 @@ class Parser
     }
 
 }
-
-/*class ClassArr
-{
-    function __construct(){
-       $this-> array_of_classes = array();
-    }
-}*/
 
 $parser = new Parser();

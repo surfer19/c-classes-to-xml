@@ -28,7 +28,7 @@ class Scanner {
         //$this->closeFile();
     }
     public function readFromFile(){
-        $file = fopen("tests/test03.in", "r");
+        $file = fopen("tests/my_test_00.in", "r");
 
         return $file;
     }
