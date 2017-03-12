@@ -8,20 +8,44 @@
  */
 class Context
 {
-    private $class_name = '';
+    /*private $class_name = '';
     // variable or method scope - class A { public: ... }
-    private $scope = '';
+    private $scope = '';*/
     // TODO
 
     // DECLARATIONS
-    private $prefix = '';
+    /*private $prefix = '';
     private $data_type = '';
     private $declaration_id = '';
-    private $parameters = array();
+    private $is_void = False;
+    private $parameters = array();*/
     // remember argument that we parse
 
     // TODO - we dont know that we parsing variable or method declaration
     //
+
+    function __construct(){
+        $this->class_name = '';
+        $this->scope = '';
+        $this->prefix = '';
+        $this->data_type = '';
+        $this->declaration_id = '';
+        $this->method_decl_id = '';
+        $this->method_return_type ='';
+        //$this->actual_method_reference = new ;
+        $this->is_void = False;
+        $this->parameters = array();
+    }
+
+    public function getIsVoid(){
+        if ($this->is_void == True){
+            return True;
+        }
+        return False;
+    }
+    public function setVoid(){
+        $this->is_void = True;
+    }
 
     public function clearScope(){
         $this->scope = '';
@@ -66,6 +90,20 @@ class Context
         return $this->prefix;
     }
 
+    public function setMethodDeclId($id){
+        $this->method_decl_id = $id;
+    }
+    public function getMethodDeclId(){
+        return $this->method_decl_id;
+    }
+
+    public function setReturnType($ret_type){
+        $this->method_return_type = $ret_type;
+    }
+    public function getReturnType(){
+        return $this->method_return_type;
+    }
+
     public function pushParameter($parameter){
         array_push($this->parameters, $parameter);
     }
@@ -82,9 +120,11 @@ class Context
 
 class ContextParameter
 {
-    private $data_type = '';
-    private $var_id = '';
-    private $is_void = False;
+    function __construct(){
+        $this->data_type = '';
+        $this->var_id = '';
+        $this->is_void = False;
+    }
 
     public function setDataType($type){
         $this->data_type = $type;

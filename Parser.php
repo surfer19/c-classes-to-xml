@@ -56,18 +56,22 @@ class Parser
         else
             echo "\n-- PARSE ERROR !!!--  " . PHP_EOL;
 
-        $this->objContext->printContext();
+        //$this->objContext->printContext();
         //$this->objTable->printTable();
+        print_r($this->objContext);
+        //var_dump($this->objContext);
 
         // invented print_r() and var_dump() in 2017
         print_r((array) $this->objTable);
 
         //$objLast = new LastClassObject($this->objTable);
+        $this->end();
     }
     /*
      *   <Prog> -> <ClassList><Eof>
      */
     public function startProg(){
+
         if($this->actual_token->data == 'class'){
             echo "         EXPECT | COME\n";
             $this->printTokenData('startProg      ');
@@ -85,12 +89,19 @@ class Parser
             // read id of class
             $this->getAndSetActualToken();
             $this->printTokenData('Classlist      ');
+
+            /*
+             *
+             *  CONTEXT class name + push object to TABLE
+             */
             // set class name to context
             $this->objContext->setClassName($this->actual_token->data);
 
             $objClass = new ClassObject();
             $objClass->setClassName($this->objContext->getClassName());
             $this->objTable->pushClass($objClass);
+
+
 
             $this->parseClass();
 
@@ -189,11 +200,16 @@ class Parser
 
             $this->printTokenData('ClassBody   suv');
 
+            $this->objContext->setPrefix($this->actual_token->data);
+
             $this->parseDeclarations();
             $this->parseClassBody();
 
         }
         elseif ($this->actual_token->data == $this->parseDataType()){
+
+            $this->objContext->setDataType($this->actual_token->data);
+
             $this->parseDeclarations();
             $this->parseClassBody();
         }
@@ -318,6 +334,7 @@ class Parser
              * CONTEXT set dataType
              */
             $this->objContext->setDataType($this->actual_token->data);
+            $this->objContext->setReturnType($this->actual_token->data);
 
             if ($this->actual_token->data == $this->parseDataType()) {
                 // get id
@@ -342,6 +359,7 @@ class Parser
              * CONTEXT set dataType
              */
             $this->objContext->setDataType($this->actual_token->data);
+            $this->objContext->setReturnType($this->actual_token->data);
 
             $this->getAndSetActualToken();
             $this->printTokenData('Decls        id');
@@ -360,8 +378,11 @@ class Parser
     }
 
     public function parseDeclaration(){
+
         //echo "DECLARATION". PHP_EOL;
         if ($this->actual_token->state == StatesEnum::S_IDENTIFIER) {
+
+            $this->objContext->setMethodDeclId($this->actual_token->data);
 
             $this->getAndSetActualToken();
 
@@ -400,9 +421,43 @@ class Parser
                 $this->getAndSetActualToken();
                 $this->printTokenData('Decl         DT');
 
+                // ITS FUNCTION START PARSE PARAMETERS
                 $this->parseParameterList();
 
-                //$this->getAndSetActualToken();
+                // parameter list push from context to TABLE
+                // get last object from Table Array
+                $last_obj = new LastClassObject($this->objTable);
+                // new method obj
+                $newMethod = new ClassMethod();
+
+                //$arr = array_merge($this->objContext->parameters, $newMethod->method_arguments);
+                //var_dump($arr);
+                // deep copy of this arr
+                //$newArray = $this->array_copy($arr);
+
+                // cant push one argument but all from $arr
+                $newMethod->method_arguments = $this->objContext->parameters;
+                $newMethod->setMethodName($this->objContext->getMethodDeclId());
+                $newMethod->setMethodReturnType($this->objContext->getReturnType());
+
+                array_push($last_obj->last_obj->methods, $newMethod);
+                //var_dump($last_obj->last_obj);
+                //array_push($last_obj->last_obj->methods, )
+
+                /*
+                 *
+                 *  Clear CONTEXT after doing with parameters
+                 *
+                 */
+                $this->objContext->declaration_id ='';
+                $this->objContext->data_type ='';
+                $this->objContext->is_void= '';
+                $this->objContext->prefix = '';
+                $this->objContext->method_return_type = '';
+                //clear array of parameters
+                unset($this->objContext->parameters); // break references
+                $this->objContext->parameters = array(); // re-initialize to empty array
+
                 $this->printTokenData('Decl          )');
 
                 $this->getAndSetActualToken();
@@ -478,14 +533,30 @@ class Parser
 
     public function parseParameterList(){
         /*
-         *  get ')' and jump from function
+         * note -  get ')' and jump from function
          */
         //get dataType
         if ($this->parseDataType()){
 
+            // CONTEXT set dataType
+            // FIXME write it to variables for definition variables maybe bad idea
+            $this->objContext->setDataType($this->actual_token->data);
+            //echo "set cont data type =". $this->objContext->getDataType() . PHP_EOL;
+
             // <DataType> is void
             if ($this->actual_token->data == 'void') {
                 $this->printTokenData('ParList    void');
+
+                // TODO TABLE finally its just void parameter
+                $this->objContext->setVoid();
+
+                $objParam = new ContextParameter();
+
+                //if ($this->objContext->getIsVoid() == True) {
+                $objParam->setVoidTrue();
+
+                $this->objContext->pushParameter($objParam);
+
                 // get ')'
                 $this->getAndSetActualToken();
                 return;
@@ -496,6 +567,18 @@ class Parser
             // get id
             if ($this->actual_token->state == StatesEnum::S_IDENTIFIER){
                 $this->printTokenData('ParList      id');
+
+                // CONTEXT set id of var
+                $this->objContext->setDeclarationId($this->actual_token->data);
+                //echo "set cont id =". $this->objContext->getDeclarationId() . PHP_EOL;
+
+                // CONTEXT - push first parameter to context array
+                $objParam = new ContextParameter();
+                $objParam->setDataType($this->objContext->getDataType());
+                $objParam->setVarId($this->objContext->getDeclarationId());
+
+                $this->objContext->pushParameter($objParam);
+                //print_r($this->objContext->parameters);
 
                 $this->getAndSetActualToken();
 
@@ -509,6 +592,7 @@ class Parser
                     $this->printTokenData('ParList       )');
                 }
             }
+            // CONTEXT end of param
         }
         // elseif TODO can be parameter <Prefix> (suv)??
         // parameter list is empty
@@ -521,7 +605,6 @@ class Parser
     }
 
     public function ParseParameterList2(){
-        echo "inside PARLIST2\n";
 
         if ($this->actual_token->state == StatesEnum::S_COMMA){
             $this->printTokenData('ParList2      ,');
@@ -530,14 +613,32 @@ class Parser
 
             if ($this->parseDataType() == $this->actual_token->data){
 
+                // CONTEXT set dataType
+                $this->objContext->setDataType($this->actual_token->data);
+
                 $this->printTokenData('ParList2     DT');
                 $this->getAndSetActualToken();
 
                 if ($this->actual_token->state == StatesEnum::S_IDENTIFIER){
+
+                    // CONTEXT set id of var
+                    $this->objContext->setDeclarationId($this->actual_token->data);
+
                     $this->printTokenData('ParList2     id');
 
                     $this->getAndSetActualToken();
                     $this->printTokenData('ParList2    ,/)');
+
+                    // CONTEXT - push first parameter to context array
+                    $objParam = new ContextParameter();
+                    $objParam->setDataType($this->objContext->getDataType());
+                    $objParam->setVarId($this->objContext->getDeclarationId());
+
+                    if ($this->objContext->getIsVoid() == True) {
+                        $objParam->setVoidTrue();
+                    }
+                    $this->objContext->pushParameter($objParam);
+//                    print_r($this->objContext->parameters);
                     // recursive call
                     $this->parseParameterList2();
                 }
@@ -618,6 +719,19 @@ class Parser
     public function getAndSetActualToken(){
         $this->actual_token = $this->scanner->getNextToken();
         return $this->actual_token;
+    }
+
+    function array_copy($arr) {
+        $newArray = array();
+        foreach($arr as $key => $value) {
+            if(is_array($value)) $newArray[$key] = $this->array_copy($value);
+            else if(is_object($value)) $newArray[$key] = clone $value;
+            else $newArray[$key] = $value;
+        }
+        return $newArray;
+    }
+    public function end(){
+        //echo $this->objTable->classArray['B']->methods[0]->method_arguments[0]->var_id;
     }
 
 }

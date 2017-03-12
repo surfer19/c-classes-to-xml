@@ -1,36 +1,11 @@
 class B {
    public:
-       static int a;
-       virtual char b;
-};
-class A {
-   private:
-       using int x;
-       virtual char y;
-};
+       static double p(void) {}
 
+       virtual int a;
 
-<ClassBody><ScopeDeclaration>
-<ClassBody>
+       int o(bool l, char16_t k, char32_t m, wchar_t n) {}
 
-
-<AccessModifier> -> eps
-<AccessModifier> -> public
-
-<Prefix> -> eps
-<Prefix> -> using
-
-
-
-class A {
-   <ClassBody>
-       private:
-            ...
-       virtual int f(void) =0;
-   <ClassBody>
+       char x;
 };
 
-class A {
-   virtual int f(void) =0;
-        ...
-};

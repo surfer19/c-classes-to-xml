@@ -89,6 +89,9 @@ class ClassTable
 }
 
 // FIXME dirty solution as fk
+
+// get last object in Table Array
+// $last_obj = new LastClassObject($this->objTable);
 class LastClassObject
 {
     function __construct($class_table){
@@ -126,11 +129,12 @@ class ClassObject
 
 class ClassMethod
 {
-    function __construct($name, $type, $arguments){
-        $this->method_name = $name;
-        $this->return_type = $type;
+    function __construct(){
+        $this->method_name = '';
+        $this->return_type = '';
         //TODO add scope
-        $this->method_arguments = $arguments;
+        // arguments == array
+        $this->method_arguments = array();
     }
     public function setMethodName($method_name){
         $this->method_name = $method_name;
@@ -149,7 +153,7 @@ class ClassMethod
     }
 }
 
-class MethodArgument {
+/*class MethodArgument {
     function __construct($name, $type){
         $this->var_name = $name;
         $this->var_data_type = $type;
@@ -166,7 +170,7 @@ class MethodArgument {
     public function getVarDataType(){
         return $this->var_data_type;
     }
-}
+}*/
 
 class ClassVariable {
     function __construct($name, $type, $scope, $prefix){
