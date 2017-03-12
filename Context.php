@@ -11,18 +11,24 @@ class Context
     private $class_name = '';
     // variable or method scope - class A { public: ... }
     private $scope = '';
+    // TODO
+
     // DECLARATIONS
     private $prefix = '';
     private $data_type = '';
     private $declaration_id = '';
     private $parameters = array();
-
-    // TODO
     // remember argument that we parse
 
     // TODO - we dont know that we parsing variable or method declaration
     //
 
+    public function clearScope(){
+        $this->scope = '';
+    }
+    public function clearPrefix(){
+        $this->prefix = '';
+    }
 
     public function setClassName($class_name){
         $this->class_name = $class_name;

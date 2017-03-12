@@ -8,3 +8,29 @@ class A {
        using int x;
        virtual char y;
 };
+
+
+<ClassBody><ScopeDeclaration>
+<ClassBody>
+
+
+<AccessModifier> -> eps
+<AccessModifier> -> public
+
+<Prefix> -> eps
+<Prefix> -> using
+
+
+
+class A {
+   <ClassBody>
+       private:
+            ...
+       virtual int f(void) =0;
+   <ClassBody>
+};
+
+class A {
+   virtual int f(void) =0;
+        ...
+};

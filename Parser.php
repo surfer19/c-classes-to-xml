@@ -14,18 +14,8 @@ define('DEBUG', true);
  * Time: 13:57
  */
 
-// TODO co ked chyba pred deklaraciou <AccessModifier> !! osetrit
-//class A {
-//  virtual int a;
-//};
-// TODO dorobit parameter list pre viac parametrov
+// TODO what is correct?  int f(void) {} or int f(void) {};
 
-// TODO moze byt viac scopov v jednej triede??
-// class B : A {
-//      public:
-//          ...
-//      private:
-//          ...
 class Parser
 {
     // just for print
@@ -36,7 +26,6 @@ class Parser
         $this->scanner = new Scanner();
         $this->actual_token = new Token();
         $this->objContext = new Context();
-
         $this->objTable = new ClassTable();
         /*
          *
@@ -80,6 +69,7 @@ class Parser
      */
     public function startProg(){
         if($this->actual_token->data == 'class'){
+            echo "         EXPECT | COME\n";
             $this->printTokenData('startProg      ');
             $this->parseClassList();
         }
@@ -181,10 +171,6 @@ class Parser
         if ($this->parseAccessModifier()){
             // CONTEXT set actual scope
             $this->objContext->setScope($this->actual_token->data);
-            // TABLE set scope
-            $last_obj = new LastClassObject($this->objTable);
-            // TODO
-            //array_push($last_obj->last_obj->)
 
             // read ':'
             $this->getAndSetActualToken();
@@ -195,17 +181,29 @@ class Parser
                 $this->getAndSetActualToken();
                 $this->parseDeclarations();
             }
+
+            $this->parseClassBody();
         }
         // SUV
         elseif ($this->parsePrefix(0)){
-            //$this->printTokenData('Decls       wtf');
-            //$this->getAndSetActualToken();
+
+            $this->printTokenData('ClassBody   suv');
+
             $this->parseDeclarations();
+            $this->parseClassBody();
+
         }
-        else {
-            $this->getAndSetActualToken();
-            $this->printTokenData('ClassB.       }');
+        elseif ($this->actual_token->data == $this->parseDataType()){
+            $this->parseDeclarations();
+            $this->parseClassBody();
         }
+
+        // REMOVED TODO maybe wrong?
+        //else {
+            //$this->getAndSetActualToken();
+            //$this->printTokenData('ClassB.       }');
+        //}
+
     }
 
     public function parseInheritanceList(){
@@ -297,8 +295,16 @@ class Parser
 
     public function parseDeclarations(){
 
+        // SPECIAL expression! using B::var;
+        // TODO push using expression to CONTEXT
+        if ($this->actual_token->data == 'using'){
+            $this->printTokenData('Decls     using');
+
+            $this->parseDeclaration();
+            $this->parseDeclarations();
+        }
         // get SUV(<Prefix>)
-        if ($this->parsePrefix(0)){
+        else if ($this->parsePrefix(0)){
             $this->printTokenData('Decls       suv');
             /*
              * CONTEXT set prefix
@@ -324,6 +330,9 @@ class Parser
 
                 $this->parseDeclaration();
                 $this->parseDeclarations();
+                // CONTEXT
+                $this->objContext->clearScope();
+                $this->objContext->clearPrefix();
             }
         }
         // get empty <Prefix> so read DataType
@@ -343,6 +352,10 @@ class Parser
 
             $this->parseDeclaration();
             $this->parseDeclarations();
+
+            // CONTEXT clear it after end declaration
+            $this->objContext->clearScope();
+            $this->objContext->clearPrefix();
         }
     }
 
@@ -389,7 +402,7 @@ class Parser
 
                 $this->parseParameterList();
 
-                $this->getAndSetActualToken();
+                //$this->getAndSetActualToken();
                 $this->printTokenData('Decl          )');
 
                 $this->getAndSetActualToken();
@@ -397,7 +410,31 @@ class Parser
                 $this->parseDeclarationBody();
 
                 //  get }
-                // TODO cant get token on this place I think but maybe iam wrong
+                $this->getAndSetActualToken();
+                $this->printTokenData('Decl           ');
+            }
+        }
+        // using expression
+        elseif ($this->actual_token->data == 'using'){
+            $this->printTokenData('Decl      using');
+
+            $this->getAndSetActualToken();
+            $this->printTokenData('Decl         id');
+
+            if ($this->actual_token->state == StatesEnum::S_IDENTIFIER){
+                $this->getAndSetActualToken();
+                $this->printTokenData('Decl          :');
+
+                $this->getAndSetActualToken();
+                $this->printTokenData('Decl          :');
+
+                $this->getAndSetActualToken();
+                $this->printTokenData('Decl         id');
+
+                $this->getAndSetActualToken();
+                $this->printTokenData('Decl          ;');
+
+                //  get } or next declaration
                 $this->getAndSetActualToken();
                 $this->printTokenData('Decl           ');
             }
@@ -431,23 +468,49 @@ class Parser
             if ($this->actual_token->state == StatesEnum:: S_RIGHT_VINCULUM){
                 $this->printTokenData('DeclBody      }');
             }
+            // FIXME int f(void) {};
+            //$this->getAndSetActualToken();
+
+            //$this->printTokenData('DeclBody      ;');
+
         }
     }
 
     public function parseParameterList(){
-
+        /*
+         *  get ')' and jump from function
+         */
+        //get dataType
         if ($this->parseDataType()){
 
             // <DataType> is void
             if ($this->actual_token->data == 'void') {
                 $this->printTokenData('ParList    void');
+                // get ')'
+                $this->getAndSetActualToken();
                 return;
             }
-            // FIXME maybe bad place
-            elseif ($this->actual_token->state == StatesEnum::S_IDENTIFIER){
+
+            $this->getAndSetActualToken();
+
+            // get id
+            if ($this->actual_token->state == StatesEnum::S_IDENTIFIER){
                 $this->printTokenData('ParList      id');
+
+                $this->getAndSetActualToken();
+
+                if ($this->actual_token->state == StatesEnum::S_COMMA) {
+                    $this->printTokenData('ParList       ,');
+                    $this->parseParameterList2();
+                }
+                // its end of params cause ')'
+                elseif ($this->actual_token->state == StatesEnum::S_RIGHT_BRACKET) {
+                    //else it is only one parameter in func
+                    $this->printTokenData('ParList       )');
+                }
             }
         }
+        // elseif TODO can be parameter <Prefix> (suv)??
         // parameter list is empty
         elseif ($this->actual_token->state == StatesEnum::S_RIGHT_BRACKET){
             $this->printTokenData('ParList      )');
@@ -455,6 +518,31 @@ class Parser
             ///$this->getAndSetActualToken();
         }
 
+    }
+
+    public function ParseParameterList2(){
+        echo "inside PARLIST2\n";
+
+        if ($this->actual_token->state == StatesEnum::S_COMMA){
+            $this->printTokenData('ParList2      ,');
+
+            $this->getAndSetActualToken();
+
+            if ($this->parseDataType() == $this->actual_token->data){
+
+                $this->printTokenData('ParList2     DT');
+                $this->getAndSetActualToken();
+
+                if ($this->actual_token->state == StatesEnum::S_IDENTIFIER){
+                    $this->printTokenData('ParList2     id');
+
+                    $this->getAndSetActualToken();
+                    $this->printTokenData('ParList2    ,/)');
+                    // recursive call
+                    $this->parseParameterList2();
+                }
+            }
+        }
     }
 
     public function parseAccessModifier(){

@@ -1,3 +1,4 @@
+// new LL
 <Prog> -> <ClassList><Eof>  // class
 <ClassList> -> eps
 <ClassList> -> <Class><ClassList>
@@ -6,13 +7,14 @@
 <InheritanceList>  -> : <AccessModifier> id <InheritanceList2>      // : public B, public C, public D
 <InheritanceList2> -> , <AccessModifier> id <InheritanceList2>       // , public B, public C, public D
 <InheritanceList2> -> eps
-<ClassBody> -> <AccessModifier> <Colon> <Declarations>
-<ClassBody> -> <Declarations>
+<ClassBody> -> <AccessModifier> <Colon>  <Declarations> <ClassBody>
+<ClassBody> -> <Declarations> <ClassBody>
 <Colon> -> :
 <Colon> -> eps
 <Declarations> -> <Declaration> <Declarations>
 <Declarations> -> eps
 <Declaration> -> <Prefix> <DataType> id <Declaration2> ;
+<Declaration> -> using id : : id ;
 <Declaration2> -> ( <ParameterList> ) <DeclarationBody>
 <Declaration2> -> ;
 <ParameterList> ->  <DataType> id <ParameterList2>                     // int a
