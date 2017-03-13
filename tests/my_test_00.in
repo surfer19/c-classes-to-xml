@@ -1,11 +1,9 @@
-class B {
-   public:
-       static double p(void) {}
+class Ks : P{
+        double p(void) {}
 
-       virtual int a;
-
-       int o(bool l, char16_t k, char32_t m, wchar_t n) {}
-
-       char x;
 };
-
+class B : JAA, public MY, ONI{
+       public:
+           int x;
+           static double papa(void) {}
+};

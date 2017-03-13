@@ -111,6 +111,8 @@ class ClassObject
     function __construct(){
         $this->methods = array();
         $this->variables = array();
+        // array of strings (names of classes) (ClassInheritanceItem )
+        $this->inheritance_from = array();
         $this->class_name = '';
     }
     public function setClassName($class_name){
@@ -127,12 +129,28 @@ class ClassObject
     }
 }
 
+class ClassInheritanceItem {
+    function __construct(){
+        $this->class_inher_name = '';
+        $this->class_inher_scope = '';
+    }
+
+    public function setName($name) {
+        $this->class_inher_name = $name;
+    }
+
+    public function setScope($scope) {
+        $this->class_inher_scope = $scope;
+    }
+}
+
 class ClassMethod
 {
     function __construct(){
         $this->method_name = '';
         $this->return_type = '';
-        //TODO add scope
+        $this->method_scope = '';
+        $this->method_prefix = '';
         // arguments == array
         $this->method_arguments = array();
     }
@@ -147,6 +165,18 @@ class ClassMethod
     }
     public function getMethodReturnType(){
         return $this->return_type;
+    }
+    public function setMethodScope($scope){
+        $this->method_scope = $scope;
+    }
+    public function getMethodScope(){
+        $this->method_scope;
+    }
+    public function setPrefix($prefix){
+        $this->method_prefix = $prefix;
+    }
+    public function getPrefix(){
+        return $this->method_prefix;
     }
     public function pushArgument($argument){
         array_push($this->method_arguments, $argument);
@@ -187,6 +217,9 @@ class ClassVariable {
     }
     public function setVarDataType($var_data_type){
         $this->var_data_type = $var_data_type;
+    }
+    public function setScope($scope){
+        $this->scope = $scope;
     }
     public function getVarDataType(){
         return $this->var_data_type;

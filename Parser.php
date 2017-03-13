@@ -3,6 +3,7 @@
 include("Scanner.php");
 include("ClassTable.php");
 include("Context.php");
+include("InheritanceParser.php");
 
 define('DEBUG_SCANNER', false);
 define('DEBUG', true);
@@ -27,6 +28,7 @@ class Parser
         $this->actual_token = new Token();
         $this->objContext = new Context();
         $this->objTable = new ClassTable();
+
         /*
          *
          * JUST FOR DEBUG SCANNER
@@ -56,15 +58,13 @@ class Parser
         else
             echo "\n-- PARSE ERROR !!!--  " . PHP_EOL;
 
-        //$this->objContext->printContext();
-        //$this->objTable->printTable();
         print_r($this->objContext);
-        //var_dump($this->objContext);
-
         // invented print_r() and var_dump() in 2017
         print_r((array) $this->objTable);
 
-        //$objLast = new LastClassObject($this->objTable);
+
+        $this->inheritanceTable = new InheritanceParser($this->objTable);
+
         $this->end();
     }
     /*
@@ -102,12 +102,9 @@ class Parser
             $this->objTable->pushClass($objClass);
 
 
-
+            //echo "parseCLass\n";
+            //print_r($this->objContext->inheritance_declarations);
             $this->parseClass();
-
-            /*  TODO
-             *  after parsing class we can push infos from context
-             */
 
             $this->parseClassList();
         }
@@ -144,10 +141,31 @@ class Parser
 
                 // get AccessModifier
                 $this->getAndSetActualToken();
+
                 $this->printTokenData("Class    PPP/id");
 
                 // CALL inherList
                 $this->parseInheritanceList();
+
+                /*
+                 * TABLE  read all inheritances so push
+                 *
+                 */
+                // MAYBE push here list of inheritances
+                $last_obj = new LastClassObject($this->objTable);
+                // array_clone = deep copy
+                $copy_array =  $this->array_clone($this->objContext->inheritance_declarations);
+                $last_obj->last_obj->inheritance_from = $copy_array;
+                echo "push inheritance \n";
+                //print_r($last_obj->last_obj->inheritance_from);
+                //print_r($this->objTable);
+
+                /*
+                 *  CONTEXT clear
+                 */
+                unset($this->objContext->inheritance_declarations); // break references
+                $this->objContext->inheritance_declarations = array(); // re-initialize to empty array
+
 
                 // inside inheritanceList read '{' so just print that
                 $this->printTokenData("Class         {");
@@ -180,7 +198,9 @@ class Parser
         // GO TO PPP ?
         // token data == public/protected/private
         if ($this->parseAccessModifier()){
-            // CONTEXT set actual scope
+            /*
+             *  CONTEXT set actual scope
+             */
             $this->objContext->setScope($this->actual_token->data);
 
             // read ':'
@@ -200,6 +220,15 @@ class Parser
 
             $this->printTokenData('ClassBody   suv');
 
+            /*
+             *  CONTEXT set actual scope
+             */
+            if ($this->objContext->getScope() == ''){
+                //default
+                $this->objContext->setScope('private');
+                echo "set to private \n";
+            }
+
             $this->objContext->setPrefix($this->actual_token->data);
 
             $this->parseDeclarations();
@@ -208,17 +237,21 @@ class Parser
         }
         elseif ($this->actual_token->data == $this->parseDataType()){
 
+            /*
+             *  CONTEXT set actual scope
+             */
+            if ($this->objContext->getScope() == ''){
+                //default
+                $this->objContext->setScope('private');
+                echo "set to private \n";
+            }
+
             $this->objContext->setDataType($this->actual_token->data);
 
             $this->parseDeclarations();
             $this->parseClassBody();
         }
 
-        // REMOVED TODO maybe wrong?
-        //else {
-            //$this->getAndSetActualToken();
-            //$this->printTokenData('ClassB.       }');
-        //}
 
     }
 
@@ -229,10 +262,23 @@ class Parser
         if ($this->actual_token->data == 'public' or $this->actual_token->data == 'private'
             or $this->actual_token->data == 'protected'){
 
+            /*
+             *  CONTEXT push PPP
+             */
+            $objItem = new ClassInheritanceItem();
+            $objItem->setScope($this->actual_token->data);
+
             $this->getAndSetActualToken();
             $this->printTokenData("InhList      id");
 
             if ($this->actual_token->state == StatesEnum::S_IDENTIFIER){
+
+                /*
+                 *  CONTEXT push id
+                 */
+                $objItem->setName($this->actual_token->data);
+                // push one inherit item
+                array_push($this->objContext->inheritance_declarations, $objItem);
 
                 $this->getAndSetActualToken();
                 $this->printTokenData("InhList     ,/{");
@@ -248,6 +294,14 @@ class Parser
         }
         // SHORT sign without <AccessModifier>
         else if ($this->actual_token->state == StatesEnum::S_IDENTIFIER){
+            /*
+             *  CONTEXT push id
+             */
+            $objItem = new ClassInheritanceItem();
+            $objItem->setName($this->actual_token->data);
+            $objItem->setScope('private');                // DEFAULT!!!
+            // push one inherit item
+            array_push($this->objContext->inheritance_declarations, $objItem);
 
             $this->getAndSetActualToken();
 
@@ -256,6 +310,7 @@ class Parser
                 $this->printTokenData("InherList     ,");
                 $this->parseInheritanceList2();
             }
+
             // else is read '{' just go up
         }
     }
@@ -267,15 +322,27 @@ class Parser
             $this->getAndSetActualToken();
             $this->printTokenData("InhList2       ");
 
+            /*
+             *  CONTEXT push PPP
+             */
+            $objItem = new ClassInheritanceItem();
+
             // if <AccessModifier>
             // TODO change this nasty if to beautiful if
             if ($this->actual_token->data == 'public' or $this->actual_token->data == 'private'
                 or $this->actual_token->data == 'protected'
             ) {
+                $objItem->setScope($this->actual_token->data);
 
                 $this->getAndSetActualToken();
                 $this->printTokenData("InhList2     id");
 
+                /*
+                 *  CONTEXT get name
+                 */
+                $objItem->setName($this->actual_token->data);
+                // push one inherit item
+                array_push($this->objContext->inheritance_declarations, $objItem);
 
                 if ($this->actual_token->state == StatesEnum::S_IDENTIFIER) {
 
@@ -294,6 +361,14 @@ class Parser
             }
             // short sign without <AccessModifier>
             else if ($this->actual_token->state == StatesEnum::S_IDENTIFIER){
+                /*
+                 *  CONTEXT get name
+                 */
+                $objItem->setName($this->actual_token->data);
+                $objItem->setScope('private');
+
+                // push one inherit item
+                array_push($this->objContext->inheritance_declarations, $objItem);
 
                 $this->getAndSetActualToken();
 
@@ -400,6 +475,10 @@ class Parser
                                               $this->objContext->getScope(),
                                               $this->objContext->getPrefix()
                 );
+                // DFAULT
+                if ($this->objContext->getScope() == ''){
+                    $obj_var->setScope('private');
+                }
 
                 //var_dump($last_obj);
                 // push it to last object
@@ -408,7 +487,13 @@ class Parser
                     echo "pushed variable\n";
                     //var_dump($last_obj);
                 }
-                //print_r((array)$last_obj);
+
+                 /*
+                 * CONTEXT clear
+                 *
+                 */
+                //unset($this->objContext->inheritance_declarations); // break references
+                //$this->objContext->inheritance_declarations = array(); // re-initialize to empty array
 
                 $this->printTokenData('Decl          ;');
                 $this->getAndSetActualToken();
@@ -430,15 +515,12 @@ class Parser
                 // new method obj
                 $newMethod = new ClassMethod();
 
-                //$arr = array_merge($this->objContext->parameters, $newMethod->method_arguments);
-                //var_dump($arr);
-                // deep copy of this arr
-                //$newArray = $this->array_copy($arr);
-
                 // cant push one argument but all from $arr
                 $newMethod->method_arguments = $this->objContext->parameters;
                 $newMethod->setMethodName($this->objContext->getMethodDeclId());
                 $newMethod->setMethodReturnType($this->objContext->getReturnType());
+                $newMethod->setMethodScope($this->objContext->getScope());
+                $newMethod->setPrefix($this->objContext->getPrefix());
 
                 array_push($last_obj->last_obj->methods, $newMethod);
                 //var_dump($last_obj->last_obj);
@@ -457,6 +539,9 @@ class Parser
                 //clear array of parameters
                 unset($this->objContext->parameters); // break references
                 $this->objContext->parameters = array(); // re-initialize to empty array
+
+                //unset($this->objContext->inheritance_declarations); // break references
+                //$this->objContext->inheritance_declarations = array(); // re-initialize to empty array
 
                 $this->printTokenData('Decl          )');
 
@@ -721,14 +806,16 @@ class Parser
         return $this->actual_token;
     }
 
-    function array_copy($arr) {
-        $newArray = array();
-        foreach($arr as $key => $value) {
-            if(is_array($value)) $newArray[$key] = $this->array_copy($value);
-            else if(is_object($value)) $newArray[$key] = clone $value;
-            else $newArray[$key] = $value;
-        }
-        return $newArray;
+    function array_clone($array) {
+        return array_map(function($element) {
+            return ((is_array($element))
+                ? call_user_func(__FUNCTION__, $element)
+                : ((is_object($element))
+                    ? clone $element
+                    : $element
+                )
+            );
+        }, $array);
     }
     public function end(){
         //echo $this->objTable->classArray['B']->methods[0]->method_arguments[0]->var_id;

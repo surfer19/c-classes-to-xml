@@ -31,8 +31,12 @@ class Context
         $this->data_type = '';
         $this->declaration_id = '';
         $this->method_decl_id = '';
+        $this->method_scope = '';
         $this->method_return_type ='';
-        //$this->actual_method_reference = new ;
+        /*$this->inherit_name ='';
+        $this->inherit_scope ='';*/
+        $this->inheritance_declarations = array();
+        // method parameter is void
         $this->is_void = False;
         $this->parameters = array();
     }
@@ -103,6 +107,26 @@ class Context
     public function getReturnType(){
         return $this->method_return_type;
     }
+
+    /*public function setInheritanceName($name){
+        $this->inherit_name = $name;
+    }
+    public function getInheritanceName(){
+        return $this->inherit_name;
+    }*/
+
+    public function setMethodScope($scope){
+        $this->method_scope = $scope;
+    }
+    public function getMethodScope(){
+        return $this->method_scope;
+    }
+    /*public function setInheritanceScope($scope){
+        $this->inherit_scope = $scope;
+    }
+    public function getInheritanceScope(){
+        return $this->inherit_scope;
+    }*/
 
     public function pushParameter($parameter){
         array_push($this->parameters, $parameter);
