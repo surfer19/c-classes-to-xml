@@ -12,44 +12,63 @@ class PrintXml
     {
         echo "print\n";
         $this->table = $table;
-        //print_r($this->table);
 
-        list($first_key) = array_keys($this->table->table->classArray);
-        //$first_class_key = $this->table->table->classArray[$firstKey]->class_name;
+        //todo get it to nice function
+        $this->writer = new XMLWriter();
+        $this->writer->openURI('out/test.out');
+        $this->writer->startDocument('1.0','UTF-8');
+        $this->writer->setIndent(4);
+        $this->printTree();
 
-        //echo "first key = " . $first_class_key . PHP_EOL;
+        $this->writer->endDocument();
+        $this->writer->flush();
 
-        //if ($this->table->table->classArray[$first_key]->inheritance_from != null){
-        echo "first class = " . $first_key . PHP_EOL;
-        // $this->printXml($first_key);
-
-        /*foreach ($this->table->table->classArray as $key => $value){
-            if ($value->inheritance_from != null){
-                $this->printXml($key);
-            }
-            else {
-                echo "class inheritance is empty = ". $value->class_name .PHP_EOL;
-            }
-        }*/
-        $this->printXml($key = $first_key);
 
     }
 
-    public function printXml()
+    public function printTree()
     {
+        $this->writer->startElement("model");
+        //$this->writer->writeElement("price_per_quantity", 110);
         // echo "this class doesnt have inheritance\n";
         foreach ($this->table->table->classArray as $key => $obj) {
-//            if ($k < 1) continue;
-            if(empty($obj->inheritance_from)){
+
+            // print root item
+            //$this->writer->startElement("class");
+            //$this->writer->endElement();
+
+            if (empty($obj->inheritance_from)) {
+                $this->writer->startElement("class");
+                $this->writer->writeAttribute('name', $key);
+                $this->writer->endElement();
                 // read next obj
-                echo "\n";
-                echo "Root item = ". $key .PHP_EOL;
-                //print_r($obj);
+                //echo "\n";
+                //echo "Root item = " . $key . PHP_EOL;
+                //echo "vetva ma aspon jeden child\n";
+                if (!empty($obj->inheritance_child)) {
+
+                  //  echo "child && ma roota\n";
+                    $this->printChild($obj->inheritance_child[0]->child_name);
+                }
             }
+            else if (!empty($obj->inheritance_child)) {
+                //echo "vetva ma aspon jeden child\n";
+                $this->printChild($obj->inheritance_child[0]->child_name);
+            }
+            // else do nothink
             else {
-                //$this->inheritClass();
-                echo "have inher list =". $key .PHP_EOL;
+                echo "else";
             }
         }
+
+        $this->writer->endElement();
+
+
     }
+
+    public function printChild($child_name)
+    {
+        echo "child name = ". $child_name . PHP_EOL;
+    }
+
 }

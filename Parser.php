@@ -314,6 +314,7 @@ class Parser
             // TODO same thing copy to parseInheritanceList2()
             echo "AKKKTTT class = ". $this->objContext->class_name . PHP_EOL;
             echo "AKKKTTT inher par = ". $this->actual_token->data. PHP_EOL;
+
             $find_key = $this->actual_token->data;
             $set_child = $this->objContext->class_name;
             // find parent object and push here his child
@@ -385,6 +386,17 @@ class Parser
 
                 // push one inherit item
                 array_push($this->objContext->inheritance_declarations, $objItem);
+
+                /*
+                 * find child of class object
+                 */
+                // TODO same thing copy to parseInheritanceList2()
+                echo "AKKKTTT class = ". $this->objContext->class_name . PHP_EOL;
+                echo "AKKKTTT inher par = ". $this->actual_token->data. PHP_EOL;
+                $find_key = $this->actual_token->data;
+                $set_child = $this->objContext->class_name;
+                // find parent object and push here his child
+                $this->findParentObj($find_key, $set_child);
 
                 $this->getAndSetActualToken();
 
