@@ -1,9 +1,4 @@
-class Ks : P{
-        double p(void) {}
-
-};
-class B : JAA, public MY, ONI{
-       public:
-           int x;
-           static double papa(void) {}
-};
+class A {};
+class B : A {};
+class C {};
+class D : B {};

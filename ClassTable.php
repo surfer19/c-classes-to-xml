@@ -112,7 +112,9 @@ class ClassObject
         $this->methods = array();
         $this->variables = array();
         // array of strings (names of classes) (ClassInheritanceItem )
+        // parenents
         $this->inheritance_from = array();
+        $this->inheritance_child = array();
         $this->class_name = '';
     }
     public function setClassName($class_name){
@@ -143,6 +145,21 @@ class ClassInheritanceItem {
         $this->class_inher_scope = $scope;
     }
 }
+class ClassInheritanceChild {
+    function __construct(){
+        $this->child_name = '';
+        $this->child_scope = '';
+    }
+
+    public function setName($name) {
+        $this->child_name = $name;
+    }
+
+    public function setScope($scope) {
+        $this->child_scope = $scope;
+    }
+}
+
 
 class ClassMethod
 {
@@ -203,11 +220,11 @@ class ClassMethod
 }*/
 
 class ClassVariable {
-    function __construct($name, $type, $scope, $prefix){
-        $this->var_name = $name;
-        $this->var_data_type = $type;
-        $this->scope = $scope;
-        $this->prefix = $prefix;
+    function __construct(){
+        $this->var_name = '';
+        $this->var_data_type = '';
+        $this->scope = '';
+        $this->prefix = '';
     }
     public function setVarName($var_name){
         $this->var_name = $var_name;
@@ -220,6 +237,9 @@ class ClassVariable {
     }
     public function setScope($scope){
         $this->scope = $scope;
+    }
+    public function setPrefix($prefix){
+        $this->prefix = $prefix;
     }
     public function getVarDataType(){
         return $this->var_data_type;

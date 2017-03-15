@@ -4,6 +4,7 @@ include("Scanner.php");
 include("ClassTable.php");
 include("Context.php");
 include("InheritanceParser.php");
+include("PrintXml.php");
 
 define('DEBUG_SCANNER', false);
 define('DEBUG', true);
@@ -16,6 +17,7 @@ define('DEBUG', true);
  */
 
 // TODO what is correct?  int f(void) {} or int f(void) {};
+// TODO write to structure =0; ?
 
 class Parser
 {
@@ -24,10 +26,10 @@ class Parser
 
     function __construct() {
         // create instance of scanenr
-        $this->scanner = new Scanner();
+        $this->scanner      = new Scanner();
         $this->actual_token = new Token();
-        $this->objContext = new Context();
-        $this->objTable = new ClassTable();
+        $this->objContext   = new Context();
+        $this->objTable     = new ClassTable();
 
         /*
          *
@@ -64,6 +66,7 @@ class Parser
 
 
         $this->inheritanceTable = new InheritanceParser($this->objTable);
+        $this->printThat        = new PrintXml($this->inheritanceTable);
 
         $this->end();
     }
@@ -100,6 +103,7 @@ class Parser
             $objClass = new ClassObject();
             $objClass->setClassName($this->objContext->getClassName());
             $this->objTable->pushClass($objClass);
+
 
 
             //echo "parseCLass\n";
@@ -256,6 +260,7 @@ class Parser
     }
 
     public function parseInheritanceList(){
+
         // LONG sign without <AccessModifier>
         // if <AccessModifier>
         // TODO change this nasty if to beautiful if
@@ -302,6 +307,17 @@ class Parser
             $objItem->setScope('private');                // DEFAULT!!!
             // push one inherit item
             array_push($this->objContext->inheritance_declarations, $objItem);
+
+            /*
+             * find child of class object
+             */
+            // TODO same thing copy to parseInheritanceList2()
+            echo "AKKKTTT class = ". $this->objContext->class_name . PHP_EOL;
+            echo "AKKKTTT inher par = ". $this->actual_token->data. PHP_EOL;
+            $find_key = $this->actual_token->data;
+            $set_child = $this->objContext->class_name;
+            // find parent object and push here his child
+            $this->findParentObj($find_key, $set_child);
 
             $this->getAndSetActualToken();
 
@@ -470,11 +486,16 @@ class Parser
                 // get last object in Table Array
                 $last_obj = new LastClassObject($this->objTable);
                 // create TABLE variable from CONTEXT values
-                $obj_var  = new ClassVariable($this->objContext->getDeclarationId(),
+                /*$obj_var  = new ClassVariable($this->objContext->getDeclarationId(),
                                               $this->objContext->getDataType(),
                                               $this->objContext->getScope(),
-                                              $this->objContext->getPrefix()
-                );
+                                              $this->objContext->getPrefix()*/
+                $obj_var  = new ClassVariable();
+                $obj_var->setVarName($this->objContext->getDeclarationId());
+                $obj_var->setPrefix($this->objContext->getPrefix());
+                $obj_var->setScope($this->objContext->getScope());
+                $obj_var->setVarDataType($this->objContext->getDataType());
+
                 // DFAULT
                 if ($this->objContext->getScope() == ''){
                     $obj_var->setScope('private');
@@ -806,7 +827,7 @@ class Parser
         return $this->actual_token;
     }
 
-    function array_clone($array) {
+    static public function array_clone($array) {
         return array_map(function($element) {
             return ((is_array($element))
                 ? call_user_func(__FUNCTION__, $element)
@@ -817,6 +838,17 @@ class Parser
             );
         }, $array);
     }
+    public function findParentObj($find_key, $set_child){
+        //foreach ($this->objTable->classArray[$find_key] as $key => $obj){
+            $newItem = new ClassInheritanceChild();
+            $newItem->child_name = $set_child;
+
+            array_push($this->objTable->classArray[$find_key]->inheritance_child, $newItem);
+            // TODO maybe child_scope
+        //}
+    }
+
+
     public function end(){
         //echo $this->objTable->classArray['B']->methods[0]->method_arguments[0]->var_id;
     }
