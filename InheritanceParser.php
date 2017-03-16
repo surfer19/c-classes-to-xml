@@ -30,6 +30,12 @@ class InheritanceParser
             echo "pasing class = ".$class_obj->class_name .PHP_EOL;
             echo "read inher class...".PHP_EOL.PHP_EOL;
 
+            //var_dump($class_obj);
+            /*if (empty($class_obj->inheritance_from)){
+
+                $this->copyClassAbstraction($found_object, $class_obj);
+            }*/
+
             // iterate over all class object inheritance items
             foreach ($class_obj->inheritance_from as $key_inher => $inherit_obj) {
 
@@ -50,6 +56,8 @@ class InheritanceParser
 
                 $this->copyClassVariables($found_object->variables, $class_obj->variables);
                 $this->copyClassMethods($found_object->methods, $class_obj->methods);
+
+                $this->copyClassAbstraction($found_object, $class_obj);
             }
         }
 
@@ -103,14 +111,19 @@ class InheritanceParser
             array_push($actual_class_meth_arr, $obj_meth);
         }
     }
-}
+    // par 1 - inheritance item
+    // par 2 - class obj that we parse
+    public function copyClassAbstraction($found_object, &$actual_obj_abstr){
+        //var_dump($actual_obj_abstr);
+        echo " neni true\n".PHP_EOL;
+        //foreach ($class_obj as $key => $obj)
+        if ($found_object->is_abstract == True){
+            // set True
+            echo " NASTAVIL SOM NA TRUE\n".PHP_EOL;
+            $actual_obj_abstr->is_abstract = True;
 
-/*class treeList
-{
-    function __construct()
-    {
-        $this->sub_array = array();
+            print_r($found_object);
+        }
+        print_r($this->table->classArray);
     }
-}*/
-
-
+}

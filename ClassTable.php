@@ -116,12 +116,19 @@ class ClassObject
         $this->inheritance_from = array();
         $this->inheritance_child = array();
         $this->class_name = '';
+        $this->is_abstract = False;
     }
     public function setClassName($class_name){
         $this->class_name = $class_name;
     }
     public function getClassName(){
         return $this->class_name;
+    }
+    public function setIsVirtual(){
+        $this->is_abstract = True;
+    }
+    public function getIsVirtual(){
+        return $this->is_abstract;
     }
     public function pushMethod($method) {
         array_push($this->methods, $method);

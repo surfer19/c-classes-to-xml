@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <model>
- <class name="A"/>
- <class name="B"/>
- <class name="C"/>
- <class name="D"/>
+  <class name="A" concrete="A">
+    <class name="C" kind="concrete"/>
+  </class>
+  <class name="B" concrete="B">
+    <class name="C" kind="concrete"/>
+  </class>
 </model>

@@ -1,4 +1,4 @@
-class A {virtual int f(void)= 0 ; };
+class A {virtual int f(void)= 0; };
 class B : A {
 public:
     int var;
@@ -12,4 +12,3 @@ public:
 class E : D {
     int f(void) {}
 };
-

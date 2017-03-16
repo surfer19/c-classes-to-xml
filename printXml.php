@@ -14,61 +14,106 @@ class PrintXml
         $this->table = $table;
 
         //todo get it to nice function
-        $this->writer = new XMLWriter();
+        /*$this->writer = new XMLWriter();
         $this->writer->openURI('out/test.out');
         $this->writer->startDocument('1.0','UTF-8');
-        $this->writer->setIndent(4);
+        $this->writer->setIndent(400);*/
+
+        $this->dom = new DOMDocument('1.0');
+        $this->root = $this->dom->createElement('model');
+        $this->dom->appendChild($this->root);
+
+        $this->dom->formatOutput = true;
+        $this->dom->preserveWhiteSpace = true;
+
         $this->printTree();
 
-        $this->writer->endDocument();
-        $this->writer->flush();
+/*        $this->writer->endDocument();
+        $this->writer->flush();*/
+        file_put_contents('out/test.out', $this->dom->saveXML());
 
 
     }
 
     public function printTree()
     {
-        $this->writer->startElement("model");
+        //$this->writer->startElement("model");
         //$this->writer->writeElement("price_per_quantity", 110);
         // echo "this class doesnt have inheritance\n";
         foreach ($this->table->table->classArray as $key => $obj) {
-
-            // print root item
-            //$this->writer->startElement("class");
-            //$this->writer->endElement();
-
+            // is root ?
+            // what if is root
             if (empty($obj->inheritance_from)) {
-                $this->writer->startElement("class");
-                $this->writer->writeAttribute('name', $key);
-                $this->writer->endElement();
-                // read next obj
-                //echo "\n";
-                //echo "Root item = " . $key . PHP_EOL;
-                //echo "vetva ma aspon jeden child\n";
-                if (!empty($obj->inheritance_child)) {
+                // create element
+                $class_tag = $this->dom->createElement('class');
 
-                  //  echo "child && ma roota\n";
-                    $this->printChild($obj->inheritance_child[0]->child_name);
+                $this->root->appendChild($class_tag);
+                // create attribute
+                //$class_attribute = $this->dom->createAttribute('name');
+                //$class_attribute_kind = $this->dom->createAttribute('kind');
+
+                //$class_attribute->value = $key;
+//                $class_tag->appendChild($class_attribute);
+//                $class_tag->appendChild($class_attribute_kind);
+
+                $class_tag->setAttribute('name',$key);
+                if ($obj->is_abstract) {
+                    $class_tag->setAttribute('abstract',$key);
                 }
+                else {
+                    $class_tag->setAttribute('concrete',$key);
+                }
+                var_dump($class_tag);
+                // just for first iteration
+                $root_helper = 1;
+                $this->printChild($key, $class_tag, $root_helper);
+
             }
-            else if (!empty($obj->inheritance_child)) {
-                //echo "vetva ma aspon jeden child\n";
-                $this->printChild($obj->inheritance_child[0]->child_name);
-            }
-            // else do nothink
-            else {
-                echo "else";
-            }
+
         }
 
-        $this->writer->endElement();
-
-
     }
 
-    public function printChild($child_name)
+    public function printChild($class_name, $class_tag, $root_helper)
     {
-        echo "child name = ". $child_name . PHP_EOL;
-    }
+        if ($root_helper == 0) {
+            //$this->writer->startElement("class");
+            //$this->writer->writeAttribute('name', $child_name);
+            $inner_class_tag = $this->dom->createElement('class');
 
+            // create attribute
+            $class_attribute_name = $this->dom->createAttribute('name');
+            $class_attribute_name->value = $class_name;
+            $class_attribute_kind = $this->dom->createAttribute('kind');
+
+            if ($this->table->table->classArray[$class_name]->is_abstract) {
+                $class_attribute_kind->value = 'abstract';
+            }
+            else {
+                $class_attribute_kind->value = 'concrete';
+            }
+
+            $inner_class_tag->appendChild($class_attribute_name);
+            $inner_class_tag->appendChild($class_attribute_kind);
+
+            $class_tag->appendChild($inner_class_tag);
+
+
+            //print_r($inner_class_tag);
+            echo "dalsia iter\n";
+        }
+        else {
+            $inner_class_tag = $class_tag;
+        }
+        //  is some inheritance child
+        if (!empty($this->table->table->classArray[$class_name]->inheritance_child)){
+
+            foreach ($this->table->table->classArray[$class_name]->inheritance_child as $key => $obj){
+                $this->printChild($obj->child_name, $inner_class_tag, $root_helper = 0);
+            }
+        }
+        else {
+            return;
+        }
+    }
 }

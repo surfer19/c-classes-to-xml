@@ -49,7 +49,7 @@ class Parser
         endif;
         echo "\n-- START PARSING --  \n".PHP_EOL;
 
-        // get first token
+        // get first token ge
         $this->getAndSetActualToken();
         // start parse LL grammar
         $this->startProg();
@@ -105,12 +105,18 @@ class Parser
             $this->objTable->pushClass($objClass);
 
 
-
             //echo "parseCLass\n";
             //print_r($this->objContext->inheritance_declarations);
             $this->parseClass();
+            /*
+             *
+             *  TABLE set abstract
+             */
+            $objClass->is_abstract = $this->objContext->is_abstract;
+            $this->objContext->is_abstract = False;
 
             $this->parseClassList();
+
         }
     }
     public function parseClass(){
@@ -279,6 +285,22 @@ class Parser
             if ($this->actual_token->state == StatesEnum::S_IDENTIFIER){
 
                 /*
+                 * find child of class object
+                 */
+
+                echo "Actual class = ". $this->objContext->class_name . PHP_EOL;
+                echo "Actual inher par = ". $this->actual_token->data. PHP_EOL;
+
+                $find_key = $this->actual_token->data;
+                $set_child = $this->objContext->class_name;
+                // find parent object and push here his child
+                if ($find_key != null) {
+                    $this->findParentObj($find_key, $set_child);
+                }
+                else {
+                    echo "NENASIEL SA PARENT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+                }
+                /*
                  *  CONTEXT push id
                  */
                 $objItem->setName($this->actual_token->data);
@@ -311,7 +333,7 @@ class Parser
             /*
              * find child of class object
              */
-            // TODO same thing copy to parseInheritanceList2()
+
             echo "AKKKTTT class = ". $this->objContext->class_name . PHP_EOL;
             echo "AKKKTTT inher par = ". $this->actual_token->data. PHP_EOL;
 
@@ -625,6 +647,8 @@ class Parser
                 $this->printTokenData('DeclBody      0');
 
                 $this->getAndSetActualToken();
+
+                $this->objContext->is_abstract = True;
 
                 if ($this->actual_token->state == StatesEnum::S_SEMICOLON) {
                     $this->printTokenData('DeclBody      ;');

@@ -33,6 +33,7 @@ class Context
         $this->method_decl_id = '';
         $this->method_scope = '';
         $this->method_return_type ='';
+        $this->is_abstract = False;
         /*$this->inherit_name ='';
         $this->inherit_scope ='';*/
         $this->inheritance_declarations = array();
