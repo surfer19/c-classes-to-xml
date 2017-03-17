@@ -1,20 +1,23 @@
 <?php
 
-/**
- * Created by PhpStorm.
- * User: majko
- * Date: 18.2.17
- * Time: 13:51
- */
+//require_once('Parser.php');
+
 class Scanner {
 
-    function __construct(){
+    private $i;
+
+    function __construct($input_dir){
         // create instance of Token
         $this->token = new Token();
         // create instance of keyWords
         $this->keyWords = new KeyWords();
         // open file
-        $this->file = $this->readFromFile();
+        $this->input_dir = $input_dir;
+        $this->file = "";
+        $this->i = 0;
+        $this->readFromFile();
+
+        //$this->newParser = new Parser();
         /*do {
             echo "-----------------\n";
             $this->getNextToken();
@@ -28,9 +31,14 @@ class Scanner {
         //$this->closeFile();
     }
     public function readFromFile(){
-        $file = fopen("tests/test12.in", "r");
 
-        return $file;
+        if ($this->input_dir != "") {
+            $this->file = file_get_contents($this->input_dir);
+        }
+        else {
+            $this->file = file_get_contents("php://stdin");
+        }
+
     }
     public function editToken($new_character, $new_state){
         $this->token->data .= $new_character;
@@ -40,9 +48,6 @@ class Scanner {
         $this->token->state = 0;
         $this->token->data = '';
     }
-    public function closeFile(){
-        fclose($this->file);
-    }
     public function getNextToken(){
 
         // INITIAL STATE
@@ -51,10 +56,10 @@ class Scanner {
         //clear token
         $this->clearToken();
 
-        while(1){
 
-            $char = fgetc($this->file);
-            //echo "read: ". $char. "\n";
+        while(1){
+            $char = substr($this->file, $this->i, 1);
+            $this->i++;
 
             switch($state){
                 case StatesEnum::S_START:
@@ -63,11 +68,6 @@ class Scanner {
                         //echo "its space\n";
                         $state = StatesEnum::S_START;
                         break;
-                    }
-                    else if(feof($this->file)){
-                        $this->editToken('EOF', StatesEnum::S_EOF);
-
-                        return $this->token;
                     }
                     else if ($char == '0'){
                         $this->editToken('0', StatesEnum::S_ZERO);
@@ -114,10 +114,6 @@ class Scanner {
                         case ';':
                             $this->editToken($char, StatesEnum::S_SEMICOLON);
                             return $this->token;
-
-                        default:
-                            echo "CHARACTER NOT FOUND LEL :(\n";
-                            die(99);
                     }
                     break;
 
@@ -131,13 +127,13 @@ class Scanner {
                         }
                     }
                     else {
-                        fseek($this->file, -1 , SEEK_CUR);
+                        $this->i--;
                         $state = StatesEnum::S_END;
                     }
                     break;
 
                 case StatesEnum::S_END:
-                    fseek($this->file, -1 , SEEK_CUR);
+                    $this->i--;
                     return $this->token;
             }
         }
@@ -145,7 +141,6 @@ class Scanner {
     }
 }
 
-//$scanner = new Scanner();
 
 class Token {
     function __construct(){

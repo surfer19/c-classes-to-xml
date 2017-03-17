@@ -55,32 +55,6 @@ class ClassTable
         $this->classArray = array();
     }
 
-    public function printTable(){
-        // print classArray
-        $i = 0;
-        echo "\nCLASSTABLE\n";
-        // print class infos
-        foreach ($this->classArray as $key => $obj) {
-
-            echo "\nclass[".$i."]\n";
-            echo "Key       : $key \nClass name: ". $obj->class_name  . PHP_EOL;
-            echo "Methods\n";
-            // print method infos
-            foreach ($obj->methods as $key2 => $obj2) {
-                echo "Key       : ". $key2 . PHP_EOL;
-                echo "name      : " . $obj2->method_name . PHP_EOL;
-                echo "ret type  : ". $obj2->return_type .PHP_EOL;
-                // print variables
-                foreach ($obj2->method_arguments as $key3 => $obj3){
-                    echo "variable\n";
-                    echo "Key       : ". $key3 . PHP_EOL;
-                    echo "name      : " . $obj3->var_name . PHP_EOL;
-                    echo "data type : " . $obj3->var_data_type . PHP_EOL;
-                }
-            }
-            $i++;
-        }
-    }
     public function pushClass($class){
         // push to associative array
         $key = $class->class_name;

@@ -8,16 +8,12 @@
  */
 class PrintXml
 {
-    function __construct($table)
+    function __construct($table, $out_dir)
     {
-        echo "print\n";
-        $this->table = $table;
 
+        $this->table = $table;
+        $this->out_dir = $out_dir;
         //todo get it to nice function
-        /*$this->writer = new XMLWriter();
-        $this->writer->openURI('out/test.out');
-        $this->writer->startDocument('1.0','UTF-8');
-        $this->writer->setIndent(400);*/
 
         $this->dom = new DOMDocument('1.0');
         $this->root = $this->dom->createElement('model');
@@ -27,19 +23,19 @@ class PrintXml
         $this->dom->preserveWhiteSpace = true;
 
         $this->printTree();
-
-/*        $this->writer->endDocument();
-        $this->writer->flush();*/
-        file_put_contents('out/test.out', $this->dom->saveXML());
-
+        
+        if ($this->out_dir != "") {
+            file_put_contents($this->out_dir, $this->dom->saveXML());
+        }
+        else {
+            echo $this->dom->saveXML();
+        }
 
     }
 
     public function printTree()
     {
-        //$this->writer->startElement("model");
-        //$this->writer->writeElement("price_per_quantity", 110);
-        // echo "this class doesnt have inheritance\n";
+
         foreach ($this->table->table->classArray as $key => $obj) {
             // is root ?
             // what if is root
@@ -48,13 +44,6 @@ class PrintXml
                 $class_tag = $this->dom->createElement('class');
 
                 $this->root->appendChild($class_tag);
-                // create attribute
-                //$class_attribute = $this->dom->createAttribute('name');
-                //$class_attribute_kind = $this->dom->createAttribute('kind');
-
-                //$class_attribute->value = $key;
-//                $class_tag->appendChild($class_attribute);
-//                $class_tag->appendChild($class_attribute_kind);
 
                 $class_tag->setAttribute('name',$key);
                 if ($obj->is_abstract) {
@@ -63,7 +52,7 @@ class PrintXml
                 else {
                     $class_tag->setAttribute('concrete',$key);
                 }
-                var_dump($class_tag);
+                //var_dump($class_tag);
                 // just for first iteration
                 $root_helper = 1;
                 $this->printChild($key, $class_tag, $root_helper);
@@ -100,7 +89,7 @@ class PrintXml
 
 
             //print_r($inner_class_tag);
-            echo "dalsia iter\n";
+            //echo "dalsia iter\n";
         }
         else {
             $inner_class_tag = $class_tag;

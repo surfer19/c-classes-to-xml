@@ -1,23 +1,13 @@
 <?php
 
-include("Scanner.php");
-include("ClassTable.php");
-include("Context.php");
-include("InheritanceParser.php");
-include("PrintXml.php");
+require_once("Scanner.php");
+require_once("ClassTable.php");
+require_once("Context.php");
+require_once("InheritanceParser.php");
+require_once("PrintXml.php");
 
 define('DEBUG_SCANNER', false);
-define('DEBUG', true);
-
-/**
- * Created by PhpStorm.
- * User: majko
- * Date: 2.3.17
- * Time: 13:57
- */
-
-// TODO what is correct?  int f(void) {} or int f(void) {};
-// TODO write to structure =0; ?
+define('DEBUG', false);
 
 class Parser
 {
@@ -25,29 +15,16 @@ class Parser
     public $name_func = "";
 
     function __construct() {
+        $this->input_dir = "";
+        $this->out_dir = "";
+
+        $this->parseArgs();
         // create instance of scanenr
-        $this->scanner      = new Scanner();
+        $this->scanner      = new Scanner($this->input_dir);
         $this->actual_token = new Token();
         $this->objContext   = new Context();
         $this->objTable     = new ClassTable();
 
-        /*
-         *
-         * JUST FOR DEBUG SCANNER
-         *
-         */
-        if(DEBUG_SCANNER):
-            echo "\n---  SCANNER  ---\n";
-            do {
-                $this->scanner->getNextToken();
-                echo "TOKEN STATE = ".$this->scanner->token->state;
-                echo "\n";
-                echo "TOKEN DATA  = ".$this->scanner->token->data;
-                echo "\n";
-                echo "-------------\n";
-            } while($this->scanner->token->state != StatesEnum::S_EOF);
-        endif;
-        echo "\n-- START PARSING --  \n".PHP_EOL;
 
         // get first token ge
         $this->getAndSetActualToken();
@@ -55,20 +32,19 @@ class Parser
         $this->startProg();
 
         if ($this->actual_token->state == StatesEnum::S_EOF) {
-            echo "\n-- SUCCESSFULLY PARSED --  " . PHP_EOL;
+            //echo "\n-- SUCCESSFULLY PARSED --  " . PHP_EOL;
         }
         else
-            echo "\n-- PARSE ERROR !!!--  " . PHP_EOL;
+            //echo "\n-- PARSE ERROR !!!--  " . PHP_EOL;
 
-        print_r($this->objContext);
+        //print_r($this->objContext);
         // invented print_r() and var_dump() in 2017
-        print_r((array) $this->objTable);
-
+        //print_r((array) $this->objTable);
 
         $this->inheritanceTable = new InheritanceParser($this->objTable);
-        $this->printThat        = new PrintXml($this->inheritanceTable);
+        $this->printThat        = new PrintXml($this->inheritanceTable, $this->out_dir);
 
-        $this->end();
+        
     }
     /*
      *   <Prog> -> <ClassList><Eof>
@@ -76,7 +52,7 @@ class Parser
     public function startProg(){
 
         if($this->actual_token->data == 'class'){
-            echo "         EXPECT | COME\n";
+            //echo "         EXPECT | COME\n";
             $this->printTokenData('startProg      ');
             $this->parseClassList();
         }
@@ -105,7 +81,7 @@ class Parser
             $this->objTable->pushClass($objClass);
 
 
-            //echo "parseCLass\n";
+            ////echo "parseCLass\n";
             //print_r($this->objContext->inheritance_declarations);
             $this->parseClass();
             /*
@@ -166,7 +142,7 @@ class Parser
                 // array_clone = deep copy
                 $copy_array =  $this->array_clone($this->objContext->inheritance_declarations);
                 $last_obj->last_obj->inheritance_from = $copy_array;
-                echo "push inheritance \n";
+                //echo "push inheritance \n";
                 //print_r($last_obj->last_obj->inheritance_from);
                 //print_r($this->objTable);
 
@@ -236,7 +212,7 @@ class Parser
             if ($this->objContext->getScope() == ''){
                 //default
                 $this->objContext->setScope('private');
-                echo "set to private \n";
+                //echo "set to private \n";
             }
 
             $this->objContext->setPrefix($this->actual_token->data);
@@ -253,7 +229,7 @@ class Parser
             if ($this->objContext->getScope() == ''){
                 //default
                 $this->objContext->setScope('private');
-                echo "set to private \n";
+                //echo "set to private \n";
             }
 
             $this->objContext->setDataType($this->actual_token->data);
@@ -288,8 +264,8 @@ class Parser
                  * find child of class object
                  */
 
-                echo "Actual class = ". $this->objContext->class_name . PHP_EOL;
-                echo "Actual inher par = ". $this->actual_token->data. PHP_EOL;
+                //echo "Actual class = ". $this->objContext->class_name . PHP_EOL;
+                //echo "Actual inher par = ". $this->actual_token->data. PHP_EOL;
 
                 $find_key = $this->actual_token->data;
                 $set_child = $this->objContext->class_name;
@@ -298,7 +274,7 @@ class Parser
                     $this->findParentObj($find_key, $set_child);
                 }
                 else {
-                    echo "NENASIEL SA PARENT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+                    //echo "NENASIEL SA PARENT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
                 }
                 /*
                  *  CONTEXT push id
@@ -334,8 +310,8 @@ class Parser
              * find child of class object
              */
 
-            echo "AKKKTTT class = ". $this->objContext->class_name . PHP_EOL;
-            echo "AKKKTTT inher par = ". $this->actual_token->data. PHP_EOL;
+            //echo "AKKKTTT class = ". $this->objContext->class_name . PHP_EOL;
+            //echo "AKKKTTT inher par = ". $this->actual_token->data. PHP_EOL;
 
             $find_key = $this->actual_token->data;
             $set_child = $this->objContext->class_name;
@@ -413,8 +389,8 @@ class Parser
                  * find child of class object
                  */
                 // TODO same thing copy to parseInheritanceList2()
-                echo "AKKKTTT class = ". $this->objContext->class_name . PHP_EOL;
-                echo "AKKKTTT inher par = ". $this->actual_token->data. PHP_EOL;
+                //echo "AKKKTTT class = ". $this->objContext->class_name . PHP_EOL;
+                //echo "AKKKTTT inher par = ". $this->actual_token->data. PHP_EOL;
                 $find_key = $this->actual_token->data;
                 $set_child = $this->objContext->class_name;
                 // find parent object and push here his child
@@ -504,7 +480,7 @@ class Parser
 
     public function parseDeclaration(){
 
-        //echo "DECLARATION". PHP_EOL;
+        ////echo "DECLARATION". PHP_EOL;
         if ($this->actual_token->state == StatesEnum::S_IDENTIFIER) {
 
             $this->objContext->setMethodDeclId($this->actual_token->data);
@@ -539,7 +515,7 @@ class Parser
                 // push it to last object
                 if ($last_obj->last_obj != null) {
                     array_push($last_obj->last_obj->variables, $obj_var);
-                    echo "pushed variable\n";
+                    //echo "pushed variable\n";
                     //var_dump($last_obj);
                 }
 
@@ -683,7 +659,7 @@ class Parser
             // CONTEXT set dataType
             // FIXME write it to variables for definition variables maybe bad idea
             $this->objContext->setDataType($this->actual_token->data);
-            //echo "set cont data type =". $this->objContext->getDataType() . PHP_EOL;
+            ////echo "set cont data type =". $this->objContext->getDataType() . PHP_EOL;
 
             // <DataType> is void
             if ($this->actual_token->data == 'void') {
@@ -712,7 +688,7 @@ class Parser
 
                 // CONTEXT set id of var
                 $this->objContext->setDeclarationId($this->actual_token->data);
-                //echo "set cont id =". $this->objContext->getDeclarationId() . PHP_EOL;
+                ////echo "set cont id =". $this->objContext->getDeclarationId() . PHP_EOL;
 
                 // CONTEXT - push first parameter to context array
                 $objParam = new ContextParameter();
@@ -793,11 +769,11 @@ class Parser
            case 'public':
            case 'protected':
            case 'private':
-               //echo "-------------------------AccessMod=TRUE". PHP_EOL;
+               ////echo "-------------------------AccessMod=TRUE". PHP_EOL;
                return true;
 
            default :
-               //echo "-------------------------AccessMod=FALSE". PHP_EOL;
+               ////echo "-------------------------AccessMod=FALSE". PHP_EOL;
                return false;
 
        }
@@ -827,7 +803,7 @@ class Parser
                 case 'char16_t':
                 case 'char32_t':
                 case 'wchar_t':
-                    //echo "-------------------------DataType=".$string. PHP_EOL;
+                    ////echo "-------------------------DataType=".$string. PHP_EOL;
                     return $string;
                     break;
 
@@ -845,17 +821,17 @@ class Parser
             case 'static':
             case 'using':
             case 'virtual':
-                //echo "-------------------------Prefix-". $this->actual_token->data ."=TRUE". PHP_EOL;
+                ////echo "-------------------------Prefix-". $this->actual_token->data ."=TRUE". PHP_EOL;
                 return ($return_value ? $string : true);
 
             default :
-                //echo "-------------------------Prefix-". $this->actual_token->data ."=FALSE". PHP_EOL;
+                ////echo "-------------------------Prefix-". $this->actual_token->data ."=FALSE". PHP_EOL;
                 return false;
         }
     }
 
     public function printTokenData($name_func){
-        echo  $name_func ." | ". $this->scanner->token->data .PHP_EOL;
+        //echo  $name_func ." | ". $this->scanner->token->data .PHP_EOL;
     }
 
     public function getAndSetActualToken(){
@@ -884,11 +860,32 @@ class Parser
         //}
     }
 
+    public function parseArgs(){
+        // Script example.php
+        $shortopts  = "";
 
-    public function end(){
-        //echo $this->objTable->classArray['B']->methods[0]->method_arguments[0]->var_id;
+        $longopts  = array(
+              "help",
+              "output:",
+              "pretty-xml::",
+              "input:",
+              "details::"
+        );
+        $options = getopt($shortopts, $longopts);
+        //var_dump($options);
+        foreach( $options as $key => $value ){
+            switch ($key){
+                case 'input':
+                    $this->input_dir = $value;
+                    break;
+
+                case 'output':
+                    $this->out_dir = $value;
+                    //echo "tuuu: ". $value;
+                    break;
+            }
+        }
     }
-
 }
 
 $parser = new Parser();

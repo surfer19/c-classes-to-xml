@@ -16,8 +16,6 @@ class InheritanceParser
         $this->table = $table;
 
         $this->copyInheritanceData();
-
-        //$this->createAbstractTree($this->table);
     }
     /**
      *  TODO
@@ -26,24 +24,18 @@ class InheritanceParser
         // iterate over all class Object
         foreach ($this->table->classArray as $key_obj => $class_obj){
 
-            echo "-------------------------------------\n";
-            echo "pasing class = ".$class_obj->class_name .PHP_EOL;
-            echo "read inher class...".PHP_EOL.PHP_EOL;
-
-            //var_dump($class_obj);
-            /*if (empty($class_obj->inheritance_from)){
-
-                $this->copyClassAbstraction($found_object, $class_obj);
-            }*/
+            //echo "-------------------------------------\n";
+            //echo "pasing class = ".$class_obj->class_name .PHP_EOL;
+            //echo "read inher class...". PHP_EOL.PHP_EOL;
 
             // iterate over all class object inheritance items
             foreach ($class_obj->inheritance_from as $key_inher => $inherit_obj) {
 
-                echo "name             : " . $inherit_obj->class_inher_name . PHP_EOL;
-                echo "scope            : " . $inherit_obj->class_inher_scope . PHP_EOL . PHP_EOL;
+                //echo "name             : " . $inherit_obj->class_inher_name . PHP_EOL;
+                //echo "scope            : " . $inherit_obj->class_inher_scope . PHP_EOL . PHP_EOL;
 
-                echo "-------------------------------------\n";
-                echo "FOUND CLASS  \n\n";
+                //echo "-------------------------------------\n";
+                //echo "FOUND CLASS  \n\n";
                 /*
                  *
                  *  Find one element from inheritance list
@@ -52,7 +44,7 @@ class InheritanceParser
                 $helper_key = $inherit_obj->class_inher_name;
                 $found_object = $this->table->classArray[$helper_key];
 
-                echo "find keyyyyyy= " . $helper_key . PHP_EOL;
+                //echo "find keyyyyyy= " . $helper_key . PHP_EOL;
 
                 $this->copyClassVariables($found_object->variables, $class_obj->variables);
                 $this->copyClassMethods($found_object->methods, $class_obj->methods);
@@ -115,15 +107,15 @@ class InheritanceParser
     // par 2 - class obj that we parse
     public function copyClassAbstraction($found_object, &$actual_obj_abstr){
         //var_dump($actual_obj_abstr);
-        echo " neni true\n".PHP_EOL;
+        //echo " neni true\n".PHP_EOL;
         //foreach ($class_obj as $key => $obj)
         if ($found_object->is_abstract == True){
             // set True
-            echo " NASTAVIL SOM NA TRUE\n".PHP_EOL;
+            //echo " NASTAVIL SOM NA TRUE\n".PHP_EOL;
             $actual_obj_abstr->is_abstract = True;
 
-            print_r($found_object);
+            //print_r($found_object);
         }
-        print_r($this->table->classArray);
+        //print_r($this->table->classArray);
     }
 }
